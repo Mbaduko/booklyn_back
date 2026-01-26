@@ -14,7 +14,7 @@ export default class Config{
     private static _env: ConfigVariables;
 
     static validateEnv = ():void => {
-        const requiredEnvVars = ['DB_URI', 'JWT_SECRET', 'JWT_EXPIRES_IN'];
+        const requiredEnvVars = ['DATABASE_URL', 'JWT_SECRET', 'JWT_EXPIRES_IN'];
         let missingVars = false;
         requiredEnvVars.forEach((varName) => {
             if (!process.env[varName]) {
