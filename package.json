@@ -7,7 +7,8 @@
     "dev": "ts-node-dev --respawn --transpile-only -r tsconfig-paths/register index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "dbconnect": "ts-node prisma/testConn.ts"
+    "dbconnect": "ts-node prisma/testConn.ts",
+    "seed": "ts-node prisma/seeds/seed.ts"
   },
   "repository": {
     "type": "git",
@@ -23,6 +24,7 @@
   "homepage": "https://github.com/Mbaduko/booklyn_back#readme",
   "dependencies": {
     "@prisma/client": "^6.19.2",
+    "argon2": "^0.44.0",
     "cors": "^2.8.6",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
@@ -32,6 +34,7 @@
     "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
+    "@types/argon2": "^0.14.1",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/helmet": "^0.0.48",
