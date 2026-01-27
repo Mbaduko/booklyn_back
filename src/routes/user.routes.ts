@@ -1,6 +1,8 @@
 
 import { Router } from 'express';
 import { UserController } from '../controllers/user.controller';
+import { authenticateToken } from '@/middlewares/authMiddleware';
+import { requireRole } from '@/middlewares/roleMiddleware';
 
 const userRouter = Router();
 
@@ -10,6 +12,8 @@ const userRouter = Router();
  *   get:
  *     summary: Get all users
  *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: List of users
@@ -24,7 +28,7 @@ const userRouter = Router();
  *       500:
  *         description: Server error
  */
-userRouter.get('/', UserController.getAllUsers);
+userRouter.get('/', authenticateToken, requireRole('librarian'), UserController.getAllUsers);
 
 /**
  * @swagger
