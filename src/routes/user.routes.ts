@@ -1,3 +1,4 @@
+
 import { Router } from 'express';
 import { UserController } from '../controllers/user.controller';
 
@@ -25,4 +26,30 @@ const userRouter = Router();
  */
 userRouter.get('/', UserController.getAllUsers);
 
+/**
+ * @swagger
+ * /users/{id}:
+ *   get:
+ *     summary: Get a single user by ID
+ *     tags: [Users]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: User ID
+ *     responses:
+ *       200:
+ *         description: User object
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/User'
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Server error
+ */
+userRouter.get('/:id', UserController.getUserById);
 export default userRouter;

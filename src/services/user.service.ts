@@ -1,6 +1,7 @@
+import AppError from '@/utils/AppError';
 import prisma from '../lib/prisma';
 
-interface User {
+export interface User {
   id: string;
   email: string;
   name: string;
@@ -24,5 +25,24 @@ export class UserService {
       },
     });
     return users;
+  }
+
+  static async getUserById(id: string): Promise<User> {
+    const user: User | null = await prisma.user.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        avatar: true,
+        createdAt: true,
+        isActive: true,
+      },
+    });
+    if (!user) {
+      throw new AppError('User not found', 404);
+    }
+    return user;
   }
 }
