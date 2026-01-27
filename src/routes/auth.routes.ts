@@ -1,5 +1,7 @@
 import { Router } from 'express';
 import { AuthController } from '../controllers/auth.controller';
+import { zodValidate } from '@/middlewares/zodValidate';
+import { credentialsSchema } from '@/validations/auth.schema';
 
 const authRouter = Router();
 
@@ -41,6 +43,6 @@ const authRouter = Router();
  *       500:
  *         description: Server error
  */
-authRouter.post('/login', AuthController.login);
+authRouter.post('/login', zodValidate(credentialsSchema, req => req.body), AuthController.login);
 
 export default authRouter;
