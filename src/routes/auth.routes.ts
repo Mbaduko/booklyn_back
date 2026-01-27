@@ -24,6 +24,7 @@ const authRouter = Router();
  *               password:
  *                 type: string
  *                 format: password
+ *                 example: password123
  *     responses:
  *       200:
  *         description: Auth response with user and token

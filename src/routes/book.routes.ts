@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { BookController } from '../controllers/book.controller';
+import { authenticateToken } from '@/middlewares/authMiddleware';
 
 const bookRouter = Router();
 
@@ -9,6 +10,8 @@ const bookRouter = Router();
  *   get:
  *     summary: Get all books
  *     tags: [Books]
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: List of books
@@ -23,7 +26,7 @@ const bookRouter = Router();
  *       500:
  *         description: Server error
  */
-bookRouter.get('/', BookController.getAllBooks);
+bookRouter.get('/', authenticateToken, BookController.getAllBooks);
 
 /**
  * @swagger
@@ -31,6 +34,8 @@ bookRouter.get('/', BookController.getAllBooks);
  *   get:
  *     summary: Get a single book by ID
  *     tags: [Books]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -50,6 +55,6 @@ bookRouter.get('/', BookController.getAllBooks);
  *       500:
  *         description: Server error
  */
-bookRouter.get('/:id', BookController.getBookById);
+bookRouter.get('/:id', authenticateToken, BookController.getBookById);
 
 export default bookRouter;

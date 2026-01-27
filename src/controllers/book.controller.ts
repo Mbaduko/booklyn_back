@@ -1,10 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
 import { BookService } from '../services/book.service';
-import { Book } from '../types/library';
+import { AuthenticatedRequest, Book } from '../types/library';
 
 export class BookController {
   static async getAllBooks(
-    req: Request,
+    req: AuthenticatedRequest,
     res: Response,
     next: NextFunction
   ): Promise<Response | void> {
@@ -17,7 +17,7 @@ export class BookController {
   }
 
   static async getBookById(
-    req: Request,
+    req: AuthenticatedRequest,
     res: Response,
     next: NextFunction
   ): Promise<Response | void> {

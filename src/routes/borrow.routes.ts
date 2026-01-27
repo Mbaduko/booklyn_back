@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { BorrowController } from '../controllers/borrow.controller';
+import { authenticateToken } from '@/middlewares/authMiddleware';
 
 const borrowRouter = Router();
 
@@ -9,6 +10,8 @@ const borrowRouter = Router();
  *   get:
  *     summary: Get all borrow records
  *     tags: [Borrows]
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: List of borrow records
@@ -23,7 +26,7 @@ const borrowRouter = Router();
  *       500:
  *         description: Server error
  */
-borrowRouter.get('/', BorrowController.getAllBorrows);
+borrowRouter.get('/', authenticateToken, BorrowController.getAllBorrows);
 
 /**
  * @swagger
@@ -31,6 +34,8 @@ borrowRouter.get('/', BorrowController.getAllBorrows);
  *   get:
  *     summary: Get a single borrow record by ID
  *     tags: [Borrows]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -50,6 +55,6 @@ borrowRouter.get('/', BorrowController.getAllBorrows);
  *       500:
  *         description: Server error
  */
-borrowRouter.get('/:id', BorrowController.getBorrowById);
+borrowRouter.get('/:id', authenticateToken, BorrowController.getBorrowById);
 
 export default borrowRouter;

@@ -1,5 +1,7 @@
 import { Router } from 'express';
 import { NotificationController } from '../controllers/notification.controller';
+import { authenticateToken } from '@/middlewares/authMiddleware';
+import { requireRole } from '@/middlewares/roleMiddleware';
 
 const notificationRouter = Router();
 
@@ -9,6 +11,8 @@ const notificationRouter = Router();
  *   get:
  *     summary: Get notifications for a user
  *     tags: [Notifications]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: query
  *         name: userId
@@ -32,6 +36,6 @@ const notificationRouter = Router();
  *       500:
  *         description: Server error
  */
-notificationRouter.get('/', NotificationController.getNotifications);
+notificationRouter.get('/', authenticateToken, requireRole('librarian', true), NotificationController.getNotifications);
 
 export default notificationRouter;

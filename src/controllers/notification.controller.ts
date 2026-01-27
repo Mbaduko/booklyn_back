@@ -1,11 +1,11 @@
 import { Request, Response, NextFunction } from 'express';
 import { NotificationService } from '../services/notification.service';
-import { Notification } from '../types/library';
+import { AuthenticatedRequest, Notification } from '../types/library';
 import AppError from '../utils/AppError';
 
 export class NotificationController {
   static async getNotifications(
-    req: Request,
+    req: AuthenticatedRequest,
     res: Response,
     next: NextFunction
   ): Promise< Response | void> {

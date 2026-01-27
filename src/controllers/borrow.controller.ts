@@ -1,10 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
 import { BorrowService } from '../services/borrow.service';
-import { BorrowRecord } from '../types/library';
+import { AuthenticatedRequest, BorrowRecord } from '../types/library';
 
 export class BorrowController {
   static async getAllBorrows(
-    req: Request,
+    req: AuthenticatedRequest,
     res: Response,
     next: NextFunction
   ): Promise<Response | void> {
@@ -17,7 +17,7 @@ export class BorrowController {
   }
 
   static async getBorrowById(
-    req: Request,
+    req: AuthenticatedRequest,
     res: Response,
     next: NextFunction
   ): Promise<Response | void> {

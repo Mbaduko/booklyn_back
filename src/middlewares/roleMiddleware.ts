@@ -18,6 +18,11 @@ export function requireRole(role: JwtPayload['role'], allowOwner = false) {
     if (allowOwner && req.user.id && req.params && req.params.id && req.user.id === req.params.id) {
       return next();
     }
+
+    if (allowOwner && req.user.id && req.query && req.query.userId && req.user.id === req.query.userId) {
+      return next();
+    }
+    
     throw new AppError('Unauthorized', 403);
   };
 }
