@@ -25,4 +25,31 @@ const bookRouter = Router();
  */
 bookRouter.get('/', BookController.getAllBooks);
 
+/**
+ * @swagger
+ * /books/{id}:
+ *   get:
+ *     summary: Get a single book by ID
+ *     tags: [Books]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Book ID
+ *     responses:
+ *       200:
+ *         description: Book object
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Book'
+ *       404:
+ *         description: Book not found
+ *       500:
+ *         description: Server error
+ */
+bookRouter.get('/:id', BookController.getBookById);
+
 export default bookRouter;

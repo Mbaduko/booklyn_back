@@ -15,4 +15,17 @@ export class BookController {
       return next(error);
     }
   }
+
+  static async getBookById(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<Response | void> {
+    try {
+      const book: Book = await BookService.getBookById(req.params.id as string);
+      return res.status(200).json(book);
+    } catch (error) {
+      return next(error);
+    }
+  }
 }

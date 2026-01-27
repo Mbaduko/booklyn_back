@@ -4,6 +4,8 @@
 - Each feature (e.g., users, books) has its own service, controller, and route file.
 - Each file exports a single class (e.g., BookService, BookController) with static methods for each operation.
 
+- Make sure that there is no function out of a class in a file.
+
 ## 2. File Naming and Placement
 - Service logic: `src/services/feature.service.ts` (e.g., `book.service.ts`).
 - Controller logic: `src/controllers/feature.controller.ts` (e.g., `book.controller.ts`).
@@ -20,6 +22,7 @@
 
 ## 5. Swagger Documentation
 - Swagger JSDoc comments are placed above route definitions in the route files.
+- Never write JSDoc comments in controller file
 - Models referenced in Swagger (`$ref`) are defined globally in the Swagger config (`src/config/swagger.ts`).
 
 ## 6. Routing
