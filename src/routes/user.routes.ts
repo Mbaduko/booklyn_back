@@ -36,6 +36,8 @@ userRouter.get('/', authenticateToken, requireRole('librarian'), UserController.
  *   get:
  *     summary: Get a single user by ID
  *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -55,5 +57,5 @@ userRouter.get('/', authenticateToken, requireRole('librarian'), UserController.
  *       500:
  *         description: Server error
  */
-userRouter.get('/:id', UserController.getUserById);
+userRouter.get('/:id', authenticateToken, requireRole('librarian', true), UserController.getUserById);
 export default userRouter;
