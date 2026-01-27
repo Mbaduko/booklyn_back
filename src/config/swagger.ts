@@ -52,6 +52,18 @@ const options = {
             overduesDays: { type: 'integer', nullable: true },
           },
         },
+        Notification: {
+          type: 'object',
+          properties: {
+            id: { type: 'string', format: 'uuid' },
+            userId: { type: 'string' },
+            title: { type: 'string' },
+            message: { type: 'string' },
+            type: { type: 'string', enum: ['info', 'warning', 'success', 'error'] },
+            read: { type: 'boolean' },
+            createdAt: { type: 'string', format: 'date-time' },
+          },
+        },
       },
     },
   },
