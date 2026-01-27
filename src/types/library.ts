@@ -1,8 +1,12 @@
+import { Request } from 'express';
 export interface JwtPayload {
   id: string;
   email: string;
   role: 'librarian' | 'client';
   isActive: boolean;
+}
+export interface AuthenticatedRequest extends Request {
+  user?: JwtPayload;
 }
 
 export interface AuthResponse {
