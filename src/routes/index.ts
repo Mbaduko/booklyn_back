@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import userRouter from './user.routes';
 import bookRouter from './book.routes';
+import borrowRouter from './borrow.routes';
 
 const router: Router = Router();
 
@@ -27,5 +28,6 @@ router.get('/', (req: Request, res: Response): Response => {
 
 router.use('/users', userRouter);
 router.use('/books', bookRouter);
+router.use('/borrows', borrowRouter);
 
 export default router;
