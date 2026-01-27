@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import userRouter from './user.routes';
+import bookRouter from './book.routes';
 
 const router: Router = Router();
 
@@ -24,6 +25,7 @@ router.get('/', (req: Request, res: Response): Response => {
     return res.send('Welcome to Booklyn API!');
 });
 
-router.use('/users', userRouter); // Import user routes
+router.use('/users', userRouter);
+router.use('/books', bookRouter);
 
 export default router;
