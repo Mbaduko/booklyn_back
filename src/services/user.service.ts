@@ -1,15 +1,7 @@
+
 import AppError from '@/utils/AppError';
 import prisma from '../lib/prisma';
-
-export interface User {
-  id: string;
-  email: string;
-  name: string;
-  role: 'librarian' | 'client';
-  avatar: string | null;
-  createdAt: Date;
-  isActive: boolean;
-}
+import { User } from '../types/library';
 
 export class UserService {
   static async getAllUsers(): Promise<User[]> {

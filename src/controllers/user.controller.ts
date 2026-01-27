@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
-import { User, UserService } from '../services/user.service';
+import { UserService } from '../services/user.service';
+import { User } from '../types/library';
 
 export class UserController {
   static async getAllUsers(req: Request, res: Response, next: NextFunction): Promise<Response | void> {

@@ -3,7 +3,7 @@ export interface User {
   email: string;
   name: string;
   role: 'librarian' | 'client';
-  avatar?: string;
+  avatar?: string | null;
   createdAt: Date;
   isActive: boolean;
 }
@@ -16,7 +16,7 @@ export interface Book {
   isbn: string;
   totalCopies: number;
   availableCopies: number;
-  coverImage?: string;
+  coverImage?: string | null;
   description?: string;
   publishedYear?: number;
 }
