@@ -3,6 +3,7 @@ import userRouter from './user.routes';
 import bookRouter from './book.routes';
 import borrowRouter from './borrow.routes';
 import notificationRouter from './notification.routes';
+import authRouter from './auth.routes';
 
 const router: Router = Router();
 
@@ -31,5 +32,6 @@ router.use('/users', userRouter);
 router.use('/books', bookRouter);
 router.use('/borrows', borrowRouter);
 router.use('/notifications', notificationRouter);
+router.use('/auth', authRouter);
 
 export default router;

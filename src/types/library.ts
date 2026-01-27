@@ -1,3 +1,14 @@
+export interface JwtPayload {
+  id: string;
+  email: string;
+  role: 'librarian' | 'client';
+  isActive: boolean;
+}
+
+export interface AuthResponse {
+  user: User;
+  token: string;
+}
 export interface User {
   id: string;
   email: string;

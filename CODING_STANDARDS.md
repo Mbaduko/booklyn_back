@@ -23,7 +23,7 @@
 ## 5. Swagger Documentation
 - Swagger JSDoc comments are placed above route definitions in the route files.
 - Never write JSDoc comments in controller file
-- Models referenced in Swagger (`$ref`) are defined globally in the Swagger config (`src/config/swagger.ts`).
+- Models referenced in Swagger (`$ref`) are defined globally in the Swagger config (`src/config/swagger.ts`), make sure these models exists when you reference to them.
 
 ## 6. Routing
 - Each module (feature) has its own router defined in a separate file in `src/routes/feature.routes.ts` (e.g., `book.routes.ts`).
