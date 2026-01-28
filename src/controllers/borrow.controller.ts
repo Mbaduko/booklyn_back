@@ -9,7 +9,9 @@ export class BorrowController {
     next: NextFunction
   ): Promise<Response | void> {
     try {
-      const borrows: BorrowRecord[] = await BorrowService.getAllBorrows();
+      const userId = req.user!.id;
+      const userRole = req.user!.role;
+      const borrows: BorrowRecord[] = await BorrowService.getAllBorrows(userId, userRole);
       return res.status(200).json(borrows);
     } catch (error) {
       return next(error);

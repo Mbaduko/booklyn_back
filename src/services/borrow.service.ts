@@ -3,8 +3,11 @@ import AppError from '../utils/AppError';
 import { BorrowRecord } from '../types/library';
 
 export class BorrowService {
-  static async getAllBorrows(): Promise<BorrowRecord[]> {
+  static async getAllBorrows(userId: string, userRole: 'librarian' | 'client'): Promise<BorrowRecord[]> {
+    const whereClause = userRole === 'librarian' ? {} : { userId };
+    
     const borrows: BorrowRecord[] = await prisma.borrowRecord.findMany({
+      where: whereClause,
       select: {
         id: true,
         bookId: true,
