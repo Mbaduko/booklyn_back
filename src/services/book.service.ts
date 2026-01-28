@@ -2,6 +2,7 @@
 import prisma from '../lib/prisma';
 import AppError from '../utils/AppError';
 import { Book } from '../types/library';
+import { CloudinaryService } from './cloudinary.service';
 
 export class BookService {
   static async getAllBooks(): Promise<Book[]> {
@@ -44,6 +45,56 @@ export class BookService {
     if (!book) {
       throw new AppError('Book not found', 404);
     }
+    return book;
+  }
+
+  static async createBook(bookData: {
+    title: string;
+    author: string;
+    category: string;
+    isbn: string;
+    totalCopies: number;
+    publishedYear?: number;
+    description?: string;
+    coverImage?: string | null;
+  }): Promise<Book> {
+    const existingBook = await prisma.book.findUnique({
+      where: { isbn: bookData.isbn },
+    });
+
+    if (existingBook) {
+      if (bookData.coverImage) {
+        await CloudinaryService.deleteImage(bookData.coverImage);
+      }
+      throw new AppError('Book with this ISBN already exists', 409);
+    }
+
+    const book: Book = await prisma.book.create({
+      data: {
+        title: bookData.title,
+        author: bookData.author,
+        category: bookData.category,
+        isbn: bookData.isbn,
+        totalCopies: bookData.totalCopies,
+        availableCopies: bookData.totalCopies,
+        publishedYear: bookData.publishedYear,
+        description: bookData.description,
+        coverImage: bookData.coverImage,
+      },
+      select: {
+        id: true,
+        title: true,
+        author: true,
+        category: true,
+        isbn: true,
+        totalCopies: true,
+        availableCopies: true,
+        coverImage: true,
+        description: true,
+        publishedYear: true,
+      },
+    }) as Book;
+
     return book;
   }
 }

@@ -28,4 +28,38 @@ export class BookController {
       return next(error);
     }
   }
+
+  static async createBook(
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction
+  ): Promise<Response | void> {
+    try {
+      const {
+        title,
+        author,
+        category,
+        isbn,
+        totalCopies,
+        publishedYear,
+        description,
+        coverImage,
+      } = req.body;
+
+      const book: Book = await BookService.createBook({
+        title,
+        author,
+        category,
+        isbn,
+        totalCopies: parseInt(totalCopies.toString()),
+        publishedYear: publishedYear ? parseInt(publishedYear.toString()) : undefined,
+        description,
+        coverImage: coverImage || null,
+      });
+
+      return res.status(201).json(book);
+    } catch (error) {
+      return next(error);
+    }
+  }
 }
