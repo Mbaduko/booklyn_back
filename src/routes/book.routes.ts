@@ -78,6 +78,76 @@ bookRouter.post(
 
 /**
  * @swagger
+ * /books/{id}:
+ *   put:
+ *     summary: Update a book
+ *     tags: [Books]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Book ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *                 description: Book title
+ *               author:
+ *                 type: string
+ *                 description: Author name
+ *               category:
+ *                 type: string
+ *                 description: Book category
+ *               isbn:
+ *                 type: string
+ *                 description: ISBN number
+ *               totalCopies:
+ *                 type: number
+ *                 description: Total copies available
+ *               publishedYear:
+ *                 type: number
+ *                 description: Year published
+ *               description:
+ *                 type: string
+ *                 description: Book description
+ *               coverImage:
+ *                 type: string
+ *                 format: binary
+ *                 description: Cover image (jpg, png, webp)
+ *     responses:
+ *       200:
+ *         description: Book updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Book'
+ *       404:
+ *         description: Book not found
+ *       409:
+ *         description: Book with this ISBN already exists
+ *       500:
+ *         description: Server error
+ */
+bookRouter.put(
+  '/:id',
+  authenticateToken,
+  requireRole('librarian'),
+  uploadImage.single('coverImage'),
+  uploadToCloudinary('coverImage', 'books'),
+  BookController.updateBook
+);
+
+/**
+ * @swagger
  * /books:
  *   get:
  *     summary: Get all books

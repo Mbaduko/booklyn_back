@@ -97,4 +97,73 @@ export class BookService {
 
     return book;
   }
+
+  static async updateBook(
+    id: string,
+    updateData: {
+      title?: string;
+      author?: string;
+      category?: string;
+      isbn?: string;
+      totalCopies?: number;
+      publishedYear?: number;
+      description?: string;
+      coverImage?: string | null;
+    }
+  ): Promise<Book> {
+    const existingBook = await prisma.book.findUnique({
+      where: { id },
+    });
+
+    if (!existingBook) {
+      if (updateData.coverImage) {
+        await CloudinaryService.deleteImage(updateData.coverImage);
+      }
+      throw new AppError('Book not found', 404);
+    }
+
+    if (updateData.isbn && updateData.isbn !== existingBook.isbn) {
+      const duplicateBook = await prisma.book.findUnique({
+        where: { isbn: updateData.isbn },
+      });
+
+      if (duplicateBook) {
+        if (updateData.coverImage) {
+          await CloudinaryService.deleteImage(updateData.coverImage);
+        }
+        throw new AppError('Book with this ISBN already exists', 409);
+      }
+    }
+
+    const oldCoverImage = existingBook.coverImage;
+
+    const updatePayload: any = { ...updateData };
+    
+    if (updateData.totalCopies !== undefined) {
+      updatePayload.availableCopies = updateData.totalCopies;
+    }
+
+    const book: Book = await prisma.book.update({
+      where: { id },
+      data: updatePayload,
+      select: {
+        id: true,
+        title: true,
+        author: true,
+        category: true,
+        isbn: true,
+        totalCopies: true,
+        availableCopies: true,
+        coverImage: true,
+        description: true,
+        publishedYear: true,
+      },
+    }) as Book;
+
+    if (oldCoverImage && updateData.coverImage !== oldCoverImage) {
+      await CloudinaryService.deleteImage(oldCoverImage);
+    }
+
+    return book;
+  }
 }
