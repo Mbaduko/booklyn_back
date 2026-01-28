@@ -51,8 +51,8 @@ export class BookController {
         author,
         category,
         isbn,
-        totalCopies: parseInt(totalCopies.toString()),
-        publishedYear: publishedYear ? parseInt(publishedYear.toString()) : undefined,
+        totalCopies: parseInt(totalCopies.toString(), 10),
+        publishedYear: publishedYear ? parseInt(publishedYear.toString(), 10) : undefined,
         description,
         coverImage: coverImage || null,
       });
@@ -87,8 +87,8 @@ export class BookController {
       if (author !== undefined && author !== '') updateData.author = author;
       if (category !== undefined && category !== '') updateData.category = category;
       if (isbn !== undefined && isbn !== '') updateData.isbn = isbn;
-      if (totalCopies !== undefined && totalCopies !== '') updateData.totalCopies = parseInt(totalCopies.toString());
-      if (publishedYear !== undefined && publishedYear !== '') updateData.publishedYear = parseInt(publishedYear.toString());
+      if (totalCopies !== undefined && totalCopies !== '') updateData.totalCopies = parseInt(totalCopies, 10);
+      if (publishedYear !== undefined && publishedYear !== '') updateData.publishedYear = parseInt(publishedYear, 10);
       if (description !== undefined && description !== '') updateData.description = description;
       if (coverImage !== undefined) updateData.coverImage = coverImage || null;
 

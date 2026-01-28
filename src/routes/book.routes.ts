@@ -4,6 +4,9 @@ import { authenticateToken } from '@/middlewares/authMiddleware';
 import { uploadImage } from '@/middlewares/multer';
 import { uploadToCloudinary } from '@/middlewares/cloudinaryUpload';
 import { requireRole } from '@/middlewares/roleMiddleware';
+import { zodValidate } from '@/middlewares/zodValidate';
+import { createBookSchema, updateBookSchema } from '@/validations/book.schema';
+import { z } from 'zod';
 
 const bookRouter = Router();
 
@@ -73,6 +76,7 @@ bookRouter.post(
   requireRole('librarian'),
   uploadImage.single('coverImage'),
   uploadToCloudinary('coverImage', 'books'),
+  zodValidate(createBookSchema, req => req.body),
   BookController.createBook
 );
 
@@ -143,6 +147,7 @@ bookRouter.put(
   requireRole('librarian'),
   uploadImage.single('coverImage'),
   uploadToCloudinary('coverImage', 'books'),
+  zodValidate(updateBookSchema, req => req.body),
   BookController.updateBook
 );
 
