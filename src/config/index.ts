@@ -7,6 +7,9 @@ interface ConfigVariables {
   dbUri: string;
   jwtSecret: string;
   jwtExpiresIn: string;
+  cloudinaryCloudName: string;
+  cloudinaryApiKey: string;
+  cloudinaryApiSecret: string;
 }
 
 export default class Config{
@@ -14,7 +17,7 @@ export default class Config{
     private static _env: ConfigVariables;
 
     static validateEnv = ():void => {
-        const requiredEnvVars = ['DATABASE_URL', 'JWT_SECRET', 'JWT_EXPIRES_IN'];
+        const requiredEnvVars = ['DATABASE_URL', 'JWT_SECRET', 'JWT_EXPIRES_IN', 'CLOUDINARY_CLOUD_NAME', 'CLOUDINARY_API_KEY', 'CLOUDINARY_API_SECRET'];
         let missingVars = false;
         requiredEnvVars.forEach((varName) => {
             if (!process.env[varName]) {
@@ -32,9 +35,12 @@ export default class Config{
         Config.validateEnv();
         Config._env = {
             port: process.env.PORT ? parseInt(process.env.PORT, 10) : 3000,
-            dbUri: process.env.DB_URI as string,
+            dbUri: process.env.DATABASE_URL as string,
             jwtSecret: process.env.JWT_SECRET as string,
             jwtExpiresIn: process.env.JWT_EXPIRES_IN as string,
+            cloudinaryCloudName: process.env.CLOUDINARY_CLOUD_NAME as string,
+            cloudinaryApiKey: process.env.CLOUDINARY_API_KEY as string,
+            cloudinaryApiSecret: process.env.CLOUDINARY_API_SECRET as string,
         };
         return Config._env;
     }
