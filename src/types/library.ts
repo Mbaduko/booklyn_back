@@ -58,3 +58,9 @@ export interface Notification {
   read: boolean;
   createdAt: Date;
 }
+
+export interface NotificationContent {
+  title: string;
+  message: string;
+  type: 'info' | 'warning' | 'success' | 'error';
+}
