@@ -1,7 +1,8 @@
 import prisma from '../lib/prisma';
 import AppError from '../utils/AppError';
-import { BorrowRecord } from '../types/library';
+import { BorrowRecord, NotificationContent } from '../types/library';
 import Config from '../config';
+import { NotificationService } from './notification.service';
 
 export class BorrowService {
   static async getAllBorrows(userId: string, userRole: 'librarian' | 'client'): Promise<BorrowRecord[]> {
@@ -55,10 +56,15 @@ export class BorrowService {
    */
   static async reserveBook(bookId: string, userId: string): Promise<BorrowRecord> {
     try {
-      // Get user to check remaining borrows
+      // Get user to check remaining borrows and get user info for notification
       const user = await prisma.user.findUnique({
         where: { id: userId },
-        select: { remainingBorrows: true, isActive: true }
+        select: { 
+          remainingBorrows: true, 
+          isActive: true,
+          name: true,
+          email: true
+        }
       });
 
       if (!user) {
@@ -74,12 +80,13 @@ export class BorrowService {
         throw new AppError('You have reached your maximum borrow limit', 409);
       }
 
-      // Get book to check availability
+      // Get book to check availability and get book info for notification
       const book = await prisma.book.findUnique({
         where: { id: bookId },
         select: { 
           id: true,
           title: true,
+          author: true,
           availableCopies: true,
           totalCopies: true
         }
@@ -156,6 +163,20 @@ export class BorrowService {
 
         return borrowRecord;
       });
+
+      // Send notification to all librarians about the reservation
+      try {
+        const librarianNotification: NotificationContent = {
+          title: 'New Book Reservation',
+          message: `${user.name} (${user.email}) has reserved "${book.title}" by ${book.author}. The reservation expires in 24 hours.`,
+          type: 'info'
+        };
+
+        await NotificationService.sendNotificationToRole('librarian', librarianNotification);
+      } catch (notificationError) {
+        // Log notification error but don't fail the reservation
+        console.error('Failed to send librarian notification:', notificationError);
+      }
 
       return result;
     } catch (error) {
