@@ -89,10 +89,10 @@ export class BorrowService {
         throw new AppError('Reservation has expired', 409);
       }
 
-      // Get user to check if still active
+      // Get user to check if still active and get user info for email
       const user = await prisma.user.findUnique({
         where: { id: borrow.userId },
-        select: { isActive: true }
+        select: { isActive: true, name: true, email: true }
       });
 
       if (!user) {
@@ -147,6 +147,25 @@ export class BorrowService {
       } catch (notificationError) {
         // Log notification error but don't fail the pickup confirmation
         console.error('Failed to send pickup notification:', notificationError);
+      }
+
+      // Send pickup confirmation email to user
+      try {
+        const pickupEmailHtml = EmailTemplate.generatePickupEmail(
+          user.name,
+          book.title,
+          book.author,
+          updatedBorrow.dueDate!
+        );
+
+        await EmailService.sendHtmlEmail(
+          user.email,
+          'Book Pickup Confirmed - Booklyn Library',
+          pickupEmailHtml
+        );
+      } catch (emailError) {
+        // Log email error but don't fail the pickup confirmation
+        console.error('Failed to send pickup email:', emailError);
       }
 
       return updatedBorrow;
