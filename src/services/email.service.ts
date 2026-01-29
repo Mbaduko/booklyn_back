@@ -56,7 +56,6 @@ export class EmailService {
 
       // Send email using Resend
       const result = await resend.emails.send(emailPayload);
-
       return result;
     } catch (error) {
       console.error('Failed to send email:', error);

@@ -3,6 +3,8 @@ import AppError from '../utils/AppError';
 import { BorrowRecord, NotificationContent } from '../types/library';
 import Config from '../config';
 import { NotificationService } from './notification.service';
+import { EmailService } from './email.service';
+import { EmailTemplate } from '../templates/email-template';
 
 export class BorrowService {
   static async getAllBorrows(userId: string, userRole: 'librarian' | 'client'): Promise<BorrowRecord[]> {
@@ -409,6 +411,25 @@ export class BorrowService {
       } catch (notificationError) {
         // Log notification error but don't fail the reservation
         console.error('Failed to send librarian notification:', notificationError);
+      }
+
+      // Send reservation confirmation email to user
+      try {
+        const reservationEmailHtml = EmailTemplate.generateReservationEmail(
+          user.name,
+          book.title,
+          book.author,
+          result.reservationExpiresAt!
+        );
+
+        await EmailService.sendHtmlEmail(
+          user.email,
+          'Book Reservation Confirmed - Booklyn Library',
+          reservationEmailHtml
+        );
+      } catch (emailError) {
+        // Log email error but don't fail the reservation
+        console.error('Failed to send reservation email:', emailError);
       }
 
       return result;
