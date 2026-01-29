@@ -125,7 +125,7 @@ export class BorrowService {
             bookId,
             status: 'reserved',
             reservedAt: new Date(),
-            reservationExpiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours from now
+            reservationExpiresAt: new Date(Date.now() + Config.env.bookReservationPeriodHours * 60 * 60 * 1000),
           },
           select: {
             id: true,
@@ -168,7 +168,7 @@ export class BorrowService {
       try {
         const librarianNotification: NotificationContent = {
           title: 'New Book Reservation',
-          message: `${user.name} (${user.email}) has reserved "${book.title}" by ${book.author}. The reservation expires in 24 hours.`,
+          message: `${user.name} (${user.email}) has reserved "${book.title}" by ${book.author}. The reservation expires in ${Config.env.bookReservationPeriodHours} hours.`,
           type: 'info'
         };
 
