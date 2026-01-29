@@ -212,10 +212,10 @@ export class BorrowService {
         throw new AppError('This book has already been returned', 409);
       }
 
-      // Get user to check if still active
+      // Get user to check if still active and get user info for email
       const user = await prisma.user.findUnique({
         where: { id: borrow.userId },
-        select: { isActive: true }
+        select: { isActive: true, name: true, email: true }
       });
 
       if (!user) {
@@ -294,6 +294,24 @@ export class BorrowService {
       } catch (notificationError) {
         // Log notification error but don't fail the return confirmation
         console.error('Failed to send return notification:', notificationError);
+      }
+
+      // Send return confirmation email to user
+      try {
+        const returnEmailHtml = EmailTemplate.generateReturnEmail(
+          user.name,
+          book.title,
+          book.author
+        );
+
+        await EmailService.sendHtmlEmail(
+          user.email,
+          'Book Returned Successfully - Booklyn Library',
+          returnEmailHtml
+        );
+      } catch (emailError) {
+        // Log email error but don't fail the return confirmation
+        console.error('Failed to send return email:', emailError);
       }
 
       return result;
