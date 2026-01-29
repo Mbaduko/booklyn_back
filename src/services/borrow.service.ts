@@ -157,6 +157,134 @@ export class BorrowService {
   }
 
   /**
+   * Confirm return of a borrowed book
+   */
+  static async confirmReturn(borrowId: string): Promise<BorrowRecord> {
+    try {
+      // Get the borrow record to validate
+      const borrow = await prisma.borrowRecord.findUnique({
+        where: { id: borrowId },
+        select: {
+          id: true,
+          bookId: true,
+          userId: true,
+          status: true,
+          reservedAt: true,
+          reservationExpiresAt: true,
+          pickupDate: true,
+          dueDate: true,
+          returnDate: true,
+          overduesDays: true,
+        },
+      }) as BorrowRecord | null;
+
+      if (!borrow) {
+        throw new AppError('Borrow record not found', 404);
+      }
+
+      // Check if the borrow is in a valid state for return
+      if (borrow.status === 'reserved') {
+        throw new AppError('Cannot return a book that is only reserved', 409);
+      }
+
+      if (borrow.status === 'returned') {
+        throw new AppError('This book has already been returned', 409);
+      }
+
+      // Get user to check if still active
+      const user = await prisma.user.findUnique({
+        where: { id: borrow.userId },
+        select: { isActive: true }
+      });
+
+      if (!user) {
+        throw new AppError('User not found', 404);
+      }
+
+      if (!user.isActive) {
+        throw new AppError('User account is not active', 409);
+      }
+
+      // Get book information for notification
+      const book = await prisma.book.findUnique({
+        where: { id: borrow.bookId },
+        select: { title: true, author: true }
+      });
+
+      if (!book) {
+        throw new AppError('Book not found', 404);
+      }
+
+      // Update the borrow record and increment book availability/user borrows in a transaction
+      const result = await prisma.$transaction(async (tx) => {
+        // Update borrow record to returned status
+        const updatedBorrow = await tx.borrowRecord.update({
+          where: { id: borrowId },
+          data: {
+            status: 'returned',
+            returnDate: new Date(),
+          },
+          select: {
+            id: true,
+            bookId: true,
+            userId: true,
+            status: true,
+            reservedAt: true,
+            reservationExpiresAt: true,
+            pickupDate: true,
+            dueDate: true,
+            returnDate: true,
+            overduesDays: true,
+          },
+        }) as BorrowRecord;
+
+        // Increment book available copies
+        await tx.book.update({
+          where: { id: borrow.bookId },
+          data: {
+            availableCopies: {
+              increment: 1
+            }
+          }
+        });
+
+        // Increment user remaining borrows
+        await tx.user.update({
+          where: { id: borrow.userId },
+          data: {
+            remainingBorrows: {
+              increment: 1
+            }
+          }
+        });
+
+        return updatedBorrow;
+      });
+
+      // Send thank you notification to user
+      try {
+        const returnNotification: NotificationContent = {
+          title: 'Book Returned Successfully',
+          message: `Thank you for returning "${book.title}" by ${book.author}. Your borrow limit has been restored. We hope you enjoyed reading it!`,
+          type: 'success'
+        };
+
+        await NotificationService.sendNotificationToUser(borrow.userId, returnNotification);
+      } catch (notificationError) {
+        // Log notification error but don't fail the return confirmation
+        console.error('Failed to send return notification:', notificationError);
+      }
+
+      return result;
+    } catch (error) {
+      if (error instanceof AppError) {
+        throw error;
+      }
+      throw new AppError('Failed to confirm book return', 500);
+    }
+  }
+
+  /**
    * Reserve a book for a user
    */
   static async reserveBook(bookId: string, userId: string): Promise<BorrowRecord> {

@@ -50,6 +50,24 @@ export class BorrowController {
   }
 
   /**
+   * Confirm return of a borrowed book
+   */
+  static async confirmReturn(
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction
+  ): Promise<Response | void> {
+    try {
+      const borrowId = req.params.borrowId as string;
+      
+      const borrow: BorrowRecord = await BorrowService.confirmReturn(borrowId);
+      return res.status(200).json(borrow);
+    } catch (error) {
+      return next(error);
+    }
+  }
+
+  /**
    * Reserve a book for the authenticated user
    */
   static async reserveBook(

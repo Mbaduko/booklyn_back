@@ -124,4 +124,37 @@ borrowRouter.post('/:bookId/reserve', authenticateToken, requireRole('client'), 
  */
 borrowRouter.post('/:borrowId/pickup', authenticateToken, requireRole('librarian'), BorrowController.confirmPickup);
 
+/**
+ * @swagger
+ * /borrows/{borrowId}/return:
+ *   post:
+ *     summary: Confirm return of a borrowed book
+ *     tags: [Borrows]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: borrowId
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: Borrow record ID to confirm return
+ *     responses:
+ *       200:
+ *         description: Book return confirmed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/BorrowRecord'
+ *       403:
+ *         description: User account not active
+ *       404:
+ *         description: Borrow record or user not found
+ *       409:
+ *         description: Book cannot be returned (already returned or only reserved)
+ *       500:
+ *         description: Server error
+ */
+borrowRouter.post('/:borrowId/return', authenticateToken, requireRole('librarian'), BorrowController.confirmReturn);
+
 export default borrowRouter;
