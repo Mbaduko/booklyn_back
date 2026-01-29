@@ -10,6 +10,7 @@ interface ConfigVariables {
   cloudinaryCloudName: string;
   cloudinaryApiKey: string;
   cloudinaryApiSecret: string;
+  maxBooksPerUser: number;
 }
 
 export default class Config{
@@ -18,13 +19,22 @@ export default class Config{
 
     static validateEnv = ():void => {
         const requiredEnvVars = ['DATABASE_URL', 'JWT_SECRET', 'JWT_EXPIRES_IN', 'CLOUDINARY_CLOUD_NAME', 'CLOUDINARY_API_KEY', 'CLOUDINARY_API_SECRET'];
+        const optionalEnvVars = ['MAX_BOOKS_PER_USER'];
         let missingVars = false;
+        
         requiredEnvVars.forEach((varName) => {
             if (!process.env[varName]) {
                 console.error(`Warning: Environment variable ${varName} is not set.`);
                 missingVars = true;
             }
         });
+
+        optionalEnvVars.forEach((varName) => {
+            if (!process.env[varName]) {
+                console.log(`Info: Optional environment variable ${varName} is not set. Using default value.`);
+            }
+        });
+        
         if (missingVars)
             process.exit(1);
 
@@ -41,6 +51,7 @@ export default class Config{
             cloudinaryCloudName: process.env.CLOUDINARY_CLOUD_NAME as string,
             cloudinaryApiKey: process.env.CLOUDINARY_API_KEY as string,
             cloudinaryApiSecret: process.env.CLOUDINARY_API_SECRET as string,
+            maxBooksPerUser: process.env.MAX_BOOKS_PER_USER ? parseInt(process.env.MAX_BOOKS_PER_USER, 10) : 5,
         };
         return Config._env;
     }
