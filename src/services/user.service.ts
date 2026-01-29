@@ -4,8 +4,8 @@ import prisma from '../lib/prisma';
 import { User } from '../types/library';
 
 export class UserService {
-  static async getAllUsers(): Promise<User[]> {
-    const users: User[] = await prisma.user.findMany({
+  static async getAllUsers(): Promise<Partial<User>[]> {
+    const users: Partial<User>[] = await prisma.user.findMany({
       select: {
         id: true,
         email: true,
@@ -19,8 +19,8 @@ export class UserService {
     return users;
   }
 
-  static async getUserById(id: string): Promise<User> {
-    const user: User | null = await prisma.user.findUnique({
+  static async getUserById(id: string): Promise<Partial<User>> {
+    const user: Partial<User> | null = await prisma.user.findUnique({
       where: { id },
       select: {
         id: true,
