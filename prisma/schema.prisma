@@ -32,16 +32,17 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  password  String
-  name      String
-  role      Role
-  avatar    String?
-  createdAt DateTime @default(now())
-  isActive  Boolean  @default(true)
-  borrowRecords BorrowRecord[]
-  notifications Notification[]
+  id              String   @id @default(uuid())
+  email           String   @unique
+  password        String
+  name            String
+  role            Role
+  avatar          String?
+  remainingBorrows Int
+  createdAt       DateTime @default(now())
+  isActive        Boolean  @default(true)
+  borrowRecords   BorrowRecord[]
+  notifications   Notification[]
 }
 
 model Book {

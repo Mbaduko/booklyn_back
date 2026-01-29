@@ -19,6 +19,7 @@ export interface User {
   name: string;
   role: 'librarian' | 'client';
   avatar?: string | null;
+  remainingBorrows: number;
   createdAt: Date;
   isActive: boolean;
 }

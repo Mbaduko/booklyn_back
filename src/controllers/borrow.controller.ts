@@ -30,4 +30,23 @@ export class BorrowController {
       return next(error);
     }
   }
+
+  /**
+   * Reserve a book for the authenticated user
+   */
+  static async reserveBook(
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction
+  ): Promise<Response | void> {
+    try {
+      const userId = req.user!.id;
+      const bookId = req.params.bookId as string;
+      
+      const borrow: BorrowRecord = await BorrowService.reserveBook(bookId, userId);
+      return res.status(201).json(borrow);
+    } catch (error) {
+      return next(error);
+    }
+  }
 }
