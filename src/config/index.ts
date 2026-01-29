@@ -12,6 +12,7 @@ interface ConfigVariables {
   cloudinaryApiSecret: string;
   maxBooksPerUser: number;
   bookReservationPeriodHours: number;
+  holdBookDurationDays: number;
 }
 
 export default class Config{
@@ -20,7 +21,7 @@ export default class Config{
 
     static validateEnv = ():void => {
         const requiredEnvVars = ['DATABASE_URL', 'JWT_SECRET', 'JWT_EXPIRES_IN', 'CLOUDINARY_CLOUD_NAME', 'CLOUDINARY_API_KEY', 'CLOUDINARY_API_SECRET'];
-        const optionalEnvVars = ['MAX_BOOKS_PER_USER', 'BOOK_RESERVATION_PERIOD_HOURS'];
+        const optionalEnvVars = ['MAX_BOOKS_PER_USER', 'BOOK_RESERVATION_PERIOD_HOURS', 'HOLD_BOOK_DURATION_DAYS'];
         let missingVars = false;
         
         requiredEnvVars.forEach((varName) => {
@@ -54,6 +55,7 @@ export default class Config{
             cloudinaryApiSecret: process.env.CLOUDINARY_API_SECRET as string,
             maxBooksPerUser: process.env.MAX_BOOKS_PER_USER ? parseInt(process.env.MAX_BOOKS_PER_USER, 10) : 5,
             bookReservationPeriodHours: process.env.BOOK_RESERVATION_PERIOD_HOURS ? parseInt(process.env.BOOK_RESERVATION_PERIOD_HOURS, 10) : 24,
+            holdBookDurationDays: process.env.HOLD_BOOK_DURATION_DAYS ? parseInt(process.env.HOLD_BOOK_DURATION_DAYS, 10) : 14,
         };
         return Config._env;
     }

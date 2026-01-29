@@ -52,6 +52,111 @@ export class BorrowService {
   }
 
   /**
+   * Confirm pickup of a reserved book
+   */
+  static async confirmPickup(borrowId: string): Promise<BorrowRecord> {
+    try {
+      // Get the borrow record to validate
+      const borrow = await prisma.borrowRecord.findUnique({
+        where: { id: borrowId },
+        select: {
+          id: true,
+          bookId: true,
+          userId: true,
+          status: true,
+          reservedAt: true,
+          reservationExpiresAt: true,
+          pickupDate: true,
+          dueDate: true,
+          returnDate: true,
+          overduesDays: true,
+        },
+      }) as BorrowRecord | null;
+
+      if (!borrow) {
+        throw new AppError('Borrow record not found', 404);
+      }
+
+      // Check if the borrow is still in reserved state
+      if (borrow.status !== 'reserved') {
+        throw new AppError('This reservation cannot be confirmed for pickup', 409);
+      }
+
+      // Check if the reservation has expired
+      if (borrow.reservationExpiresAt && new Date() > borrow.reservationExpiresAt) {
+        throw new AppError('Reservation has expired', 409);
+      }
+
+      // Get user to check if still active
+      const user = await prisma.user.findUnique({
+        where: { id: borrow.userId },
+        select: { isActive: true }
+      });
+
+      if (!user) {
+        throw new AppError('Requester not found', 404);
+      }
+
+      if (!user.isActive) {
+        throw new AppError('Requester account is not active', 409);
+      }
+
+      // Get book information for notification
+      const book = await prisma.book.findUnique({
+        where: { id: borrow.bookId },
+        select: { title: true, author: true }
+      });
+
+      if (!book) {
+        throw new AppError('Book not found', 404);
+      }
+
+      // Update the borrow record to borrowed status
+      const updatedBorrow = await prisma.borrowRecord.update({
+        where: { id: borrowId },
+        data: {
+          status: 'borrowed',
+          pickupDate: new Date(),
+          dueDate: new Date(Date.now() + Config.env.holdBookDurationDays* 24 * 60 * 60 * 1000), // 14 days from now
+        },
+        select: {
+          id: true,
+          bookId: true,
+          userId: true,
+          status: true,
+          reservedAt: true,
+          reservationExpiresAt: true,
+          pickupDate: true,
+          dueDate: true,
+          returnDate: true,
+          overduesDays: true,
+        },
+      }) as BorrowRecord;
+
+      // Send notification to user about successful pickup
+      try {
+        const pickupNotification: NotificationContent = {
+          title: 'Book Pickup Confirmed',
+          message: `You have successfully picked up "${book.title}" by ${book.author}. The book is due on ${updatedBorrow.dueDate?.toLocaleDateString()}. Enjoy reading!`,
+          type: 'success'
+        };
+
+        await NotificationService.sendNotificationToUser(borrow.userId, pickupNotification);
+      } catch (notificationError) {
+        // Log notification error but don't fail the pickup confirmation
+        console.error('Failed to send pickup notification:', notificationError);
+      }
+
+      return updatedBorrow;
+    } catch (error) {
+      if (error instanceof AppError) {
+        throw error;
+      }
+      throw new AppError('Failed to confirm book pickup', 500);
+    }
+  }
+
+  /**
    * Reserve a book for a user
    */
   static async reserveBook(bookId: string, userId: string): Promise<BorrowRecord> {

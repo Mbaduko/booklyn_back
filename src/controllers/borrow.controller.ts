@@ -32,6 +32,24 @@ export class BorrowController {
   }
 
   /**
+   * Confirm pickup of a reserved book
+   */
+  static async confirmPickup(
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction
+  ): Promise<Response | void> {
+    try {
+      const borrowId = req.params.borrowId as string;
+      
+      const borrow: BorrowRecord = await BorrowService.confirmPickup(borrowId);
+      return res.status(200).json(borrow);
+    } catch (error) {
+      return next(error);
+    }
+  }
+
+  /**
    * Reserve a book for the authenticated user
    */
   static async reserveBook(
