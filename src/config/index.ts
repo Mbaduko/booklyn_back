@@ -13,6 +13,8 @@ interface ConfigVariables {
   maxBooksPerUser: number;
   bookReservationPeriodHours: number;
   holdBookDurationDays: number;
+  resendApiKey: string;
+  resendSenderEmail: string;
 }
 
 export default class Config{
@@ -21,7 +23,7 @@ export default class Config{
 
     static validateEnv = ():void => {
         const requiredEnvVars = ['DATABASE_URL', 'JWT_SECRET', 'JWT_EXPIRES_IN', 'CLOUDINARY_CLOUD_NAME', 'CLOUDINARY_API_KEY', 'CLOUDINARY_API_SECRET'];
-        const optionalEnvVars = ['MAX_BOOKS_PER_USER', 'BOOK_RESERVATION_PERIOD_HOURS', 'HOLD_BOOK_DURATION_DAYS'];
+        const optionalEnvVars = ['MAX_BOOKS_PER_USER', 'BOOK_RESERVATION_PERIOD_HOURS', 'HOLD_BOOK_DURATION_DAYS', 'RESEND_API_KEY', 'RESEND_SENDER_EMAIL'];
         let missingVars = false;
         
         requiredEnvVars.forEach((varName) => {
@@ -56,6 +58,8 @@ export default class Config{
             maxBooksPerUser: process.env.MAX_BOOKS_PER_USER ? parseInt(process.env.MAX_BOOKS_PER_USER, 10) : 5,
             bookReservationPeriodHours: process.env.BOOK_RESERVATION_PERIOD_HOURS ? parseInt(process.env.BOOK_RESERVATION_PERIOD_HOURS, 10) : 24,
             holdBookDurationDays: process.env.HOLD_BOOK_DURATION_DAYS ? parseInt(process.env.HOLD_BOOK_DURATION_DAYS, 10) : 14,
+            resendApiKey: process.env.RESEND_API_KEY as string,
+            resendSenderEmail: process.env.RESEND_SENDER_EMAIL as string,
         };
         return Config._env;
     }
