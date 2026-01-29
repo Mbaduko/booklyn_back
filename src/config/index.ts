@@ -15,6 +15,7 @@ interface ConfigVariables {
   holdBookDurationDays: number;
   resendApiKey: string;
   resendSenderEmail: string;
+  redisUrl: string;
 }
 
 export default class Config{
@@ -22,7 +23,7 @@ export default class Config{
     private static _env: ConfigVariables;
 
     static validateEnv = ():void => {
-        const requiredEnvVars = ['DATABASE_URL', 'JWT_SECRET', 'JWT_EXPIRES_IN', 'CLOUDINARY_CLOUD_NAME', 'CLOUDINARY_API_KEY', 'CLOUDINARY_API_SECRET'];
+        const requiredEnvVars = ['DATABASE_URL', 'JWT_SECRET', 'JWT_EXPIRES_IN', 'CLOUDINARY_CLOUD_NAME', 'CLOUDINARY_API_KEY', 'CLOUDINARY_API_SECRET', 'REDIS_URL'];
         const optionalEnvVars = ['MAX_BOOKS_PER_USER', 'BOOK_RESERVATION_PERIOD_HOURS', 'HOLD_BOOK_DURATION_DAYS', 'RESEND_API_KEY', 'RESEND_SENDER_EMAIL'];
         let missingVars = false;
         
@@ -60,6 +61,7 @@ export default class Config{
             holdBookDurationDays: process.env.HOLD_BOOK_DURATION_DAYS ? parseInt(process.env.HOLD_BOOK_DURATION_DAYS, 10) : 14,
             resendApiKey: process.env.RESEND_API_KEY as string,
             resendSenderEmail: process.env.RESEND_SENDER_EMAIL as string,
+            redisUrl: process.env.REDIS_URL as string,
         };
         return Config._env;
     }
