@@ -327,6 +327,14 @@ export class BorrowService {
         console.error('Failed to send return email:', emailError);
       }
 
+      // Cancel pending due reminder
+      try {
+        await ReminderService.cancelDueReminder(borrow.id);
+      } catch (reminderError) {
+        // Log reminder error but don't fail the return confirmation
+        console.error('Failed to cancel due reminder:', reminderError);
+      }
+
       return result;
     } catch (error) {
       if (error instanceof AppError) {
