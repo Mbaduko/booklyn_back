@@ -17,6 +17,11 @@ export interface DueReminderJobData {
   dueDate: Date;
 }
 
+export interface OverdueSetterJobData {
+  borrowId: string;
+  dueDate: Date;
+}
+
 export class ReminderService {
   /**
    * Schedule a pickup reminder for a reserved book
@@ -74,6 +79,75 @@ export class ReminderService {
     } catch (error) {
       console.error('Failed to schedule pickup reminder:', error);
       throw new Error(`Failed to schedule pickup reminder: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
+   * Schedule a job to mark a borrow as overdue
+   * @param borrowId - The borrow record ID
+   * @param dueDate - When the book is due
+   */
+  static async scheduleOverdueSetter(
+    borrowId: string,
+    dueDate: Date
+  ): Promise<void> {
+    try {
+      const now = new Date();
+      
+      // Calculate delay from now to due date
+      const delay = dueDate.getTime() - now.getTime();
+      
+      // Only schedule if due date is in the future
+      if (delay <= 0) {
+        console.log(`Overdue setter for borrow ${borrowId} is in the past, skipping scheduling`);
+        return;
+      }
+
+      const jobData: OverdueSetterJobData = {
+        borrowId,
+        dueDate,
+      };
+
+      // Add job to reminder queue
+      await reminderQueue.add(
+        'overdue-setter',
+        jobData,
+        {
+          delay, // Delay in milliseconds
+          attempts: 3, // Retry up to 3 times
+          backoff: {
+            type: 'exponential',
+            delay: 5000, // Start with 5 seconds
+          },
+          removeOnComplete: 10, // Keep last 10 completed jobs
+          removeOnFail: 5, // Keep last 5 failed jobs
+        }
+      );
+
+      console.log(`Overdue setter scheduled for borrow ${borrowId} at ${dueDate.toISOString()}`);
+    } catch (error) {
+      console.error('Failed to schedule overdue setter:', error);
+      throw new Error(`Failed to schedule overdue setter: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
+   * Cancel an overdue setter job for a specific borrow
+   * @param borrowId - The borrow record ID
+   */
+  static async cancelOverdueSetter(borrowId: string): Promise<void> {
+    try {
+      const jobs = await reminderQueue.getJobs(['waiting', 'delayed']);
+      
+      for (const job of jobs) {
+        if (job.name === 'overdue-setter' && job.data.borrowId === borrowId) {
+          await job.remove();
+          console.log(`Overdue setter cancelled for borrow ${borrowId}`);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to cancel overdue setter:', error);
+      throw new Error(`Failed to cancel overdue setter: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -185,12 +259,14 @@ export class ReminderService {
   static async getReminderStatus(borrowId: string): Promise<{
     pickupReminder: { scheduled: boolean; data?: any; runAt?: Date } | null;
     dueReminder: { scheduled: boolean; data?: any; runAt?: Date } | null;
+    overdueSetter: { scheduled: boolean; data?: any; runAt?: Date } | null;
   }> {
     try {
       const jobs = await reminderQueue.getJobs(['waiting', 'delayed', 'completed', 'failed']);
       
       let pickupReminder = null;
       let dueReminder = null;
+      let overdueSetter = null;
 
       for (const job of jobs) {
         if (job.data.borrowId === borrowId) {
@@ -204,11 +280,13 @@ export class ReminderService {
             pickupReminder = reminderData;
           } else if (job.name === 'due-reminder') {
             dueReminder = reminderData;
+          } else if (job.name === 'overdue-setter') {
+            overdueSetter = reminderData;
           }
         }
       }
 
-      return { pickupReminder, dueReminder };
+      return { pickupReminder, dueReminder, overdueSetter };
     } catch (error) {
       console.error('Failed to get reminder status:', error);
       throw new Error(`Failed to get reminder status: ${error instanceof Error ? error.message : 'Unknown error'}`);

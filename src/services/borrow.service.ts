@@ -189,6 +189,17 @@ export class BorrowService {
         console.error('Failed to cancel pickup reminder:', reminderError);
       }
 
+      // Schedule overdue setter
+      try {
+        await ReminderService.scheduleOverdueSetter(
+          updatedBorrow.id,
+          updatedBorrow.dueDate!
+        );
+      } catch (reminderError) {
+        // Log reminder error but don't fail the pickup confirmation
+        console.error('Failed to schedule overdue setter:', reminderError);
+      }
+
       return updatedBorrow;
     } catch (error) {
       if (error instanceof AppError) {
