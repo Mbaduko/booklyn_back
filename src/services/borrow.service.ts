@@ -5,6 +5,7 @@ import Config from '../config';
 import { NotificationService } from './notification.service';
 import { EmailService } from './email.service';
 import { EmailTemplate } from '../templates/email-template';
+import { ReminderService } from './reminder.service';
 
 export class BorrowService {
   static async getAllBorrows(userId: string, userRole: 'librarian' | 'client'): Promise<BorrowRecord[]> {
@@ -436,6 +437,8 @@ export class BorrowService {
         return borrowRecord;
       });
 
+      const rem = await ReminderService.schedulePickupReminder(result.id, user.email, result.reservationExpiresAt!);
+      
       // Send notification to all librarians about the reservation
       try {
         const librarianNotification: NotificationContent = {

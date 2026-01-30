@@ -1,6 +1,9 @@
 import { Queue } from "bullmq";
-import { redis } from "../redis";
+import Config from "@/config";
 
 export const reminderQueue = new Queue("reminder", {
-    connection: redis,
+    connection: {
+        url: Config.env.redisUrl,
+        tls: {}
+    }
 });

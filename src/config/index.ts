@@ -16,6 +16,8 @@ interface ConfigVariables {
   resendApiKey: string;
   resendSenderEmail: string;
   redisUrl: string;
+  pickRemindTime: number;
+  dueRemindTime: number;
 }
 
 export default class Config{
@@ -24,7 +26,7 @@ export default class Config{
 
     static validateEnv = ():void => {
         const requiredEnvVars = ['DATABASE_URL', 'JWT_SECRET', 'JWT_EXPIRES_IN', 'CLOUDINARY_CLOUD_NAME', 'CLOUDINARY_API_KEY', 'CLOUDINARY_API_SECRET', 'REDIS_URL'];
-        const optionalEnvVars = ['MAX_BOOKS_PER_USER', 'BOOK_RESERVATION_PERIOD_HOURS', 'HOLD_BOOK_DURATION_DAYS', 'RESEND_API_KEY', 'RESEND_SENDER_EMAIL'];
+        const optionalEnvVars = ['MAX_BOOKS_PER_USER', 'BOOK_RESERVATION_PERIOD_HOURS', 'HOLD_BOOK_DURATION_DAYS', 'RESEND_API_KEY', 'RESEND_SENDER_EMAIL', 'PICK_REMIND_TIME', 'DUE_REMIND_TIME'];
         let missingVars = false;
         
         requiredEnvVars.forEach((varName) => {
@@ -62,6 +64,8 @@ export default class Config{
             resendApiKey: process.env.RESEND_API_KEY as string,
             resendSenderEmail: process.env.RESEND_SENDER_EMAIL as string,
             redisUrl: process.env.REDIS_URL as string,
+            pickRemindTime: process.env.PICK_REMIND_TIME ? parseInt(process.env.PICK_REMIND_TIME, 10) : 2,
+            dueRemindTime: process.env.DUE_REMIND_TIME ? parseInt(process.env.DUE_REMIND_TIME, 10) : 24,
         };
         return Config._env;
     }
