@@ -354,6 +354,14 @@ export class BorrowService {
         console.error('Failed to cancel due reminder:', reminderError);
       }
 
+      // Cancel pending overdue setter
+      try {
+        await ReminderService.cancelOverdueSetter(borrow.id);
+      } catch (reminderError) {
+        // Log reminder error but don't fail the return confirmation
+        console.error('Failed to cancel overdue setter:', reminderError);
+      }
+
       return result;
     } catch (error) {
       if (error instanceof AppError) {
