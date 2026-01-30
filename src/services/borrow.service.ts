@@ -169,6 +169,18 @@ export class BorrowService {
         console.error('Failed to send pickup email:', emailError);
       }
 
+      // Schedule due date reminder
+      try {
+        await ReminderService.scheduleDueReminder(
+          updatedBorrow.id,
+          user.email,
+          updatedBorrow.dueDate!
+        );
+      } catch (reminderError) {
+        // Log reminder error but don't fail the pickup confirmation
+        console.error('Failed to schedule due reminder:', reminderError);
+      }
+
       return updatedBorrow;
     } catch (error) {
       if (error instanceof AppError) {
