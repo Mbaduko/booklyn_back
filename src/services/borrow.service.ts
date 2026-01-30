@@ -181,6 +181,14 @@ export class BorrowService {
         console.error('Failed to schedule due reminder:', reminderError);
       }
 
+      // Cancel pending pickup reminder
+      try {
+        await ReminderService.cancelPickupReminder(borrow.id);
+      } catch (reminderError) {
+        // Log reminder error but don't fail the pickup confirmation
+        console.error('Failed to cancel pickup reminder:', reminderError);
+      }
+
       return updatedBorrow;
     } catch (error) {
       if (error instanceof AppError) {
