@@ -8,7 +8,10 @@
     "build": "tsc && tsc-alias",
     "start": "node dist/index.js",
     "dbconnect": "ts-node prisma/testConn.ts",
-    "seed": "ts-node prisma/seeds/seed.ts"
+    "seed": "ts-node prisma/seeds/seed.ts",
+    "worker:dev": "ts-node-dev --respawn --project workers/tsconfig.json -r tsconfig-paths/register workers/index.ts",
+    "worker:build": "tsc -p workers/tsconfig.json",
+    "worker:start": "node dist-workers/index.js"
   },
   "repository": {
     "type": "git",
