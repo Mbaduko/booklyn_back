@@ -50,23 +50,50 @@ export default class Config{
 
     static get env(): ConfigVariables {
         Config.validateEnv();
+
         Config._env = {
-            port: process.env.PORT ? parseInt(process.env.PORT, 10) : 3000,
+            port: (() => {
+                const v = Number(process.env.PORT)
+                return Number.isFinite(v) ? v : 3000
+            })(),
+
             dbUri: process.env.DATABASE_URL as string,
             jwtSecret: process.env.JWT_SECRET as string,
             jwtExpiresIn: process.env.JWT_EXPIRES_IN as string,
             cloudinaryCloudName: process.env.CLOUDINARY_CLOUD_NAME as string,
             cloudinaryApiKey: process.env.CLOUDINARY_API_KEY as string,
             cloudinaryApiSecret: process.env.CLOUDINARY_API_SECRET as string,
-            maxBooksPerUser: process.env.MAX_BOOKS_PER_USER ? parseInt(process.env.MAX_BOOKS_PER_USER, 10) : 5,
-            bookReservationPeriodHours: process.env.BOOK_RESERVATION_PERIOD_HOURS ? parseInt(process.env.BOOK_RESERVATION_PERIOD_HOURS, 10) : 24,
-            holdBookDurationDays: process.env.HOLD_BOOK_DURATION_DAYS ? parseInt(process.env.HOLD_BOOK_DURATION_DAYS, 10) : 14,
+
+            maxBooksPerUser: (() => {
+                const v = Number(process.env.MAX_BOOKS_PER_USER)
+                return Number.isFinite(v) ? v : 5
+            })(),
+
+            bookReservationPeriodHours: (() => {
+                const v = Number(process.env.BOOK_RESERVATION_PERIOD_HOURS)
+                return Number.isFinite(v) ? v : 24
+            })(),
+
+            holdBookDurationDays: (() => {
+                const v = Number(process.env.HOLD_BOOK_DURATION_DAYS)
+                return Number.isFinite(v) ? v : 14
+            })(),
+
             resendApiKey: process.env.RESEND_API_KEY as string,
             resendSenderEmail: process.env.RESEND_SENDER_EMAIL as string,
             redisUrl: process.env.REDIS_URL as string,
-            pickRemindTime: process.env.PICK_REMIND_TIME ? parseInt(process.env.PICK_REMIND_TIME, 10) : 2,
-            dueRemindTime: process.env.DUE_REMIND_TIME ? parseInt(process.env.DUE_REMIND_TIME, 10) : 24,
-        };
+
+            pickRemindTime: (() => {
+                const v = Number(process.env.PICK_REMIND_TIME)
+                return Number.isFinite(v) ? v : 2
+            })(),
+
+            dueRemindTime: (() => {
+                const v = Number(process.env.DUE_REMIND_TIME)
+                return Number.isFinite(v) ? v : 24
+            })(),
+        }
+
         return Config._env;
     }
 }

@@ -39,9 +39,18 @@ export default class Config{
             resendApiKey: process.env.RESEND_API_KEY as string,
             resendSenderEmail: process.env.RESEND_SENDER_EMAIL as string,
             redisUrl: process.env.REDIS_URL as string,
-            bookReservationPeriodHours: process.env.BOOK_RESERVATION_PERIOD_HOURS ? parseInt(process.env.BOOK_RESERVATION_PERIOD_HOURS, 10) : 24,
-            pickRemindTime: process.env.PICK_REMIND_TIME ? parseInt(process.env.PICK_REMIND_TIME, 10) : 2,
-        };
+
+            bookReservationPeriodHours: (() => {
+                const v = Number(process.env.BOOK_RESERVATION_PERIOD_HOURS)
+                return Number.isFinite(v) ? v : 24
+            })(),
+
+            pickRemindTime: (() => {
+                const v = Number(process.env.PICK_REMIND_TIME)
+                return Number.isFinite(v) ? v : 2
+            })(),
+        }
+
         return Config._env;
     }
 }

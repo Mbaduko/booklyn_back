@@ -1,15 +1,13 @@
 import { Worker } from "bullmq";
 import Config from "./src/config/index";
 import { processReminder } from "./src/reminder/index.reminder";
+import { redis } from "./src/lib/redis";
 
 export const reminderWorker = new Worker(
   "reminder-queue",
   processReminder,
   {
-    connection:{
-        url: Config.env.redisUrl,
-        tls: {}
-    },
+    connection: redis
   }
 );
 
