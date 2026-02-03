@@ -41,12 +41,28 @@ export default class ReminderHandler {
 
             // Calculate pickup deadline using the schema's reservationExpiresAt field
             const pickupDeadline = borrowRecord.reservationExpiresAt;
-            const hoursUntilDeadline = Math.ceil((pickupDeadline.getTime() - Date.now()) / (1000 * 60 * 60));
+            const now = new Date();
+            const timeUntilDeadline = pickupDeadline.getTime() - now.getTime();
 
-            // Check if we should send reminder based on pickRemindTime
-            if (hoursUntilDeadline > Config.env.pickRemindTime) {
-                console.log(`Pickup deadline is ${hoursUntilDeadline} hours away, which is more than ${Config.env.pickRemindTime} hours. Skipping reminder.`);
-                return { success: false, reason: 'Too early for reminder', hoursUntilDeadline };
+            // Convert to human-readable time
+            const days = Math.floor(timeUntilDeadline / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((timeUntilDeadline % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((timeUntilDeadline % (1000 * 60 * 60)) / (1000 * 60));
+
+            let timeRemaining = '';
+            if (days > 0) {
+                timeRemaining = `${days} day${days > 1 ? 's' : ''}, ${hours} hour${hours > 1 ? 's' : ''}`;
+            } else if (hours > 0) {
+                timeRemaining = `${hours} hour${hours > 1 ? 's' : ''}, ${minutes} minute${minutes > 1 ? 's' : ''}`;
+            } else {
+                timeRemaining = `${minutes} minute${minutes > 1 ? 's' : ''}`;
+            }
+
+            // Check if we should send reminder based on pickRemindTime (convert to milliseconds)
+            const pickRemindTimeMs = Config.env.pickRemindTime * 60 * 60 * 1000;
+            if (timeUntilDeadline > pickRemindTimeMs) {
+                console.log(`Pickup deadline is ${timeRemaining} away, which is more than ${Config.env.pickRemindTime} hours. Skipping reminder.`);
+                return { success: false, reason: 'Too early for reminder', timeRemaining };
             }
 
             // Generate pickup reminder email using template
@@ -54,7 +70,7 @@ export default class ReminderHandler {
                 <p>This is a friendly reminder that your reserved book is ready for pickup and the deadline is approaching soon!</p>
                 
                 <div class="warning-text">
-                    <strong>⏰ Time Sensitive:</strong> You have <strong>${hoursUntilDeadline} hours</strong> remaining to pick up your book before the reservation expires.
+                    <strong>Time Sensitive:</strong> You have <strong>${timeRemaining}</strong> remaining to pick up your book before the reservation expires.
                 </div>
                 
                 <p>Please visit the library during our operating hours to collect your book. If you don't pick it up in time, the reservation will be automatically cancelled and the book will become available for other users.</p>
@@ -79,7 +95,7 @@ export default class ReminderHandler {
                 userEmail, 
                 bookTitle: borrowRecord.book.title,
                 pickupDeadline,
-                hoursUntilDeadline
+                timeRemaining
             };
 
         } catch (error) {

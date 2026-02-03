@@ -4,7 +4,7 @@ import { processReminder } from "./src/reminder/index.reminder";
 import { redis } from "./src/lib/redis";
 
 export const reminderWorker = new Worker(
-  "reminder-queue",
+  "reminder",
   processReminder,
   {
     connection: redis

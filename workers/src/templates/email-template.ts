@@ -287,7 +287,7 @@ export class EmailTemplate {
         <div class="footer">
             <div class="footer-content">
                 <div style="font-size: 18px; font-weight: 600; margin-bottom: 10px;">
-                    📚 Booklyn Library
+                    Booklyn Library
                 </div>
                 <div class="muted-text">
                     Empowering readers, one book at a time
@@ -328,7 +328,7 @@ export class EmailTemplate {
   static generateBookInfo(title: string, author: string, additionalInfo?: { [key: string]: string }): string {
     let bookInfo = `
     <div class="book-info">
-        <h3>📖 Book Details</h3>
+        <h3>Book Details</h3>
         <p><strong>Title:</strong> ${title}</p>
         <p><strong>Author:</strong> ${author}</p>
     `;
