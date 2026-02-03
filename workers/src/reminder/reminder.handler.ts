@@ -5,6 +5,24 @@ import { EmailTemplate } from "../templates/email-template";
 import prisma from "../lib/prisma";
 import Config from "../config/index";
 
+// Helper function to convert milliseconds to human-readable time
+function formatTimeDifference(milliseconds: number): string {
+    const seconds = Math.floor(milliseconds / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+
+    if (days > 0) {
+        return `${days} day${days > 1 ? 's' : ''}`;
+    } else if (hours > 0) {
+        return `${hours} hour${hours > 1 ? 's' : ''}`;
+    } else if (minutes > 0) {
+        return `${minutes} minute${minutes > 1 ? 's' : ''}`;
+    } else {
+        return 'less than a minute';
+    }
+}
+
 export default class ReminderHandler {
     static async pickupReminderHandler(job: Job) {
         const { borrowId, userEmail }: PickupReminderJobData = job.data;
@@ -250,17 +268,18 @@ export default class ReminderHandler {
                 }
             });
 
-            // Calculate days until due
+            // Calculate time until due in human-readable format
             const now = new Date();
             const dueDate = new Date(job.data.dueDate);
-            const daysUntilDue = Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+            const timeUntilDue = dueDate.getTime() - now.getTime();
+            const timeUntilDueHuman = formatTimeDifference(timeUntilDue);
 
             // Generate due reminder email
             const emailContent = `
                 <p>This is a friendly reminder that your borrowed book is due soon.</p>
                 
                 <div class="warning-text">
-                    <strong>Due Date Approaching:</strong> "${borrowRecord.book.title}" is due in <strong>${daysUntilDue} day${daysUntilDue > 1 ? 's' : ''}</strong>.
+                    <strong>Due Date Approaching:</strong> "${borrowRecord.book.title}" is due in <strong>${timeUntilDueHuman}</strong>.
                 </div>
                 
                 <p>Please return the book to the library before the due date to avoid late fees. You can also renew the book online if you need more time.</p>
@@ -291,7 +310,7 @@ export default class ReminderHandler {
                 userEmail, 
                 bookTitle: borrowRecord.book.title,
                 dueDate,
-                daysUntilDue,
+                timeUntilDue: timeUntilDueHuman,
                 action: 'status_set_to_due_soon'
             };
 
@@ -335,17 +354,18 @@ export default class ReminderHandler {
                 return { success: false, reason: 'Book not borrowed or due_soon', status: borrowRecord.status };
             }
 
-            // Calculate overdue days
+            // Calculate overdue time in human-readable format
             const now = new Date();
             const dueDate = new Date(job.data.dueDate);
-            const overdueDays = Math.floor((now.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24));
+            const overdueTime = now.getTime() - dueDate.getTime();
+            const overdueTimeHuman = formatTimeDifference(overdueTime);
 
             // Update the borrow record status to overdue and set overdue days
             const updatedBorrow = await prisma.borrowRecord.update({
                 where: { id: borrowId },
                 data: {
                     status: 'overdue',
-                    overduesDays: overdueDays
+                    overduesDays: Math.floor(overdueTime / (1000 * 60 * 60 * 24))
                 }
             });
 
@@ -357,7 +377,7 @@ export default class ReminderHandler {
                     <strong>Book Overdue:</strong> "${borrowRecord.book.title}" was due on ${dueDate.toLocaleDateString()}.
                 </div>
                 
-                <p>The book is <strong>${overdueDays} day${overdueDays > 1 ? 's' : ''}</strong> overdue. Late fees may apply according to library policy.</p>
+                <p>The book is <strong>${overdueTimeHuman}</strong> overdue. Late fees may apply according to library policy.</p>
                 
                 <p>Please return the book as soon as possible to avoid additional charges. If you have already returned the book, please contact the library staff.</p>
                 
@@ -372,12 +392,12 @@ export default class ReminderHandler {
                     text: 'View My Account',
                     url: 'https://booklyn.com/account'
                 },
-                footerText: `Book was due on ${dueDate.toLocaleDateString()}. Current overdue: ${overdueDays} day${overdueDays > 1 ? 's' : ''}.`
+                footerText: `Book was due on ${dueDate.toLocaleDateString()}. Current overdue: ${overdueTimeHuman}.`
             });
 
             await EmailService.sendHtmlEmail(borrowRecord.user.email, 'Book Overdue - Booklyn Library', emailHtml);
 
-            console.log(`✅ Overdue status set for ${borrowRecord.user.email} - Book "${borrowRecord.book.title}" is ${overdueDays} day${overdueDays > 1 ? 's' : ''} overdue (Borrow ID: ${borrowId})`);
+            console.log(`✅ Overdue status set for ${borrowRecord.user.email} - Book "${borrowRecord.book.title}" is ${overdueTimeHuman} overdue (Borrow ID: ${borrowId})`);
 
             return { 
                 success: true, 
@@ -385,7 +405,7 @@ export default class ReminderHandler {
                 userEmail: borrowRecord.user.email,
                 bookTitle: borrowRecord.book.title,
                 dueDate,
-                overdueDays,
+                overdueTime: overdueTimeHuman,
                 action: 'status_set_to_overdue'
             };
 
