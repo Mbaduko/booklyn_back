@@ -79,7 +79,7 @@ export default class ReminderHandler {
             `;
 
             const emailHtml = EmailTemplate.generateTemplate({
-                title: '📚 Book Pickup Reminder - Time Running Out!',
+                title: 'Book Pickup Reminder - Time Running Out!',
                 content: emailContent,
                 userName: borrowRecord.user.name,
                 footerText: `Reservation expires on ${pickupDeadline.toLocaleString()}. Please arrive 10 minutes early for a smooth pickup process.`
