@@ -32,6 +32,68 @@ export class BorrowService {
     return borrows;
   }
 
+  static async getBorrowHistory(
+    userId: string, 
+    userRole: 'librarian' | 'client',
+    fromDate?: Date,
+    toDate?: Date
+  ): Promise<any[]> {
+    // Set default date range to past 7 days if not provided
+    const now = new Date();
+    const defaultFromDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const defaultToDate = now;
+
+    const from = fromDate || defaultFromDate;
+    const to = toDate || defaultToDate;
+
+    // Build where clause based on user role and date range
+    const whereClause: any = {
+      reservedAt: {
+        gte: from,
+        lte: to,
+      },
+    };
+
+    // If user is client, only return their own borrows
+    if (userRole === 'client') {
+      whereClause.userId = userId;
+    }
+
+    const borrows = await prisma.borrowRecord.findMany({
+      where: whereClause,
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true,
+          },
+        },
+        book: {
+          select: {
+            id: true,
+            title: true,
+            author: true,
+            isbn: true,
+            category: true,
+            availableCopies: true,
+            totalCopies: true,
+          },
+        },
+      },
+      orderBy: {
+        reservedAt: 'desc',
+      },
+    });
+
+    if (!borrows || borrows.length === 0) {
+      throw new AppError('No borrow records found in the specified time range', 404);
+    }
+
+    return borrows;
+  }
+
   static async getBorrowById(id: string): Promise<BorrowRecord> {
     const borrow: BorrowRecord | null = await prisma.borrowRecord.findUnique({
       where: { id },

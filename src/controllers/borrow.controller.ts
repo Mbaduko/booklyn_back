@@ -18,6 +18,44 @@ export class BorrowController {
     }
   }
 
+  static async getBorrowHistory(
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction
+  ): Promise<Response | void> {
+    try {
+      const userId = req.user!.id;
+      const userRole = req.user!.role;
+      
+      // Parse query parameters
+      const { from, to } = req.query;
+      
+      let fromDate: Date | undefined;
+      let toDate: Date | undefined;
+      
+      // Parse from date if provided
+      if (from && typeof from === 'string') {
+        fromDate = new Date(from);
+        if (isNaN(fromDate.getTime())) {
+          return res.status(400).json({ error: 'Invalid from date format. Use ISO date format.' });
+        }
+      }
+      
+      // Parse to date if provided
+      if (to && typeof to === 'string') {
+        toDate = new Date(to);
+        if (isNaN(toDate.getTime())) {
+          return res.status(400).json({ error: 'Invalid to date format. Use ISO date format.' });
+        }
+      }
+      
+      const borrows = await BorrowService.getBorrowHistory(userId, userRole, fromDate, toDate);
+      return res.status(200).json(borrows);
+    } catch (error) {
+      return next(error);
+    }
+  }
+
   static async getBorrowById(
     req: AuthenticatedRequest,
     res: Response,

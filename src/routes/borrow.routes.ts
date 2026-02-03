@@ -31,6 +31,90 @@ borrowRouter.get('/', authenticateToken, BorrowController.getAllBorrows);
 
 /**
  * @swagger
+ * /borrows/history:
+ *   get:
+ *     summary: Get borrow history within a time range
+ *     tags: [Borrows]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: from
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: Start date for the history range (optional, defaults to 7 days ago)
+ *       - in: query
+ *         name: to
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: End date for the history range (optional, defaults to now)
+ *     responses:
+ *       200:
+ *         description: List of borrow records in the specified time range
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: string
+ *                   status:
+ *                     type: string
+ *                   reservedAt:
+ *                     type: string
+ *                     format: date-time
+ *                   pickupDate:
+ *                     type: string
+ *                     format: date-time
+ *                   dueDate:
+ *                     type: string
+ *                     format: date-time
+ *                   returnDate:
+ *                     type: string
+ *                     format: date-time
+ *                   overduesDays:
+ *                     type: integer
+ *                   user:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                       name:
+ *                         type: string
+ *                       email:
+ *                         type: string
+ *                       role:
+ *                         type: string
+ *                   book:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                       title:
+ *                         type: string
+ *                       author:
+ *                         type: string
+ *                       isbn:
+ *                         type: string
+ *                       category:
+ *                         type: string
+ *                       availableCopies:
+ *                         type: integer
+ *                       totalCopies:
+ *                         type: integer
+ *       404:
+ *         description: No borrow records found in the specified time range
+ *       500:
+ *         description: Server error
+ */
+borrowRouter.get('/history', authenticateToken, BorrowController.getBorrowHistory);
+
+/**
+ * @swagger
  * /borrows/{id}:
  *   get:
  *     summary: Get a single borrow record by ID
