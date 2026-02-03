@@ -477,7 +477,7 @@ export default class ReminderHandler {
             // Send notification to library staff
             try {
                 await NotificationService.sendNotificationToRole(
-                    'admin',
+                    'librarian',
                     {
                         title: 'Book Overdue Alert',
                         message: `User ${borrowRecord.user.name} (${borrowRecord.user.email}) has "${borrowRecord.book.title}" overdue by ${overdueTimeHuman}. Please follow up if necessary.`,
