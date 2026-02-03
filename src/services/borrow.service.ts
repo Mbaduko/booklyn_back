@@ -189,6 +189,14 @@ export class BorrowService {
         console.error('Failed to cancel pickup reminder:', reminderError);
       }
 
+      // Cancel pending pickup expiry
+      try {
+        await ReminderService.cancelPickupExpiry(borrow.id);
+      } catch (reminderError) {
+        // Log reminder error but don't fail the pickup confirmation
+        console.error('Failed to cancel pickup expiry:', reminderError);
+      }
+
       // Schedule overdue setter
       try {
         await ReminderService.scheduleOverdueSetter(
@@ -485,6 +493,20 @@ export class BorrowService {
       });
 
       const rem = await ReminderService.schedulePickupReminder(result.id, user.email, result.reservationExpiresAt!);
+      
+      // Schedule pickup expiry job
+      try {
+        await ReminderService.schedulePickupExpiry(
+          result.id, 
+          user.email, 
+          result.reservationExpiresAt!,
+          book.title,
+          book.author
+        );
+      } catch (reminderError) {
+        // Log reminder error but don't fail the reservation
+        console.error('Failed to schedule pickup expiry:', reminderError);
+      }
       
       // Send notification to all librarians about the reservation
       try {

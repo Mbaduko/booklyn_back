@@ -10,6 +10,9 @@ export async function processReminder(job: Job) {
     
     case "pickup-reminder":
       return await ReminderHandler.pickupReminderHandler(job);
+    
+    case "pickup-expiry":
+      return await ReminderHandler.pickupExpiryHandler(job);
 
     default:
       console.warn("⚠️ Unknown job:", job.name);

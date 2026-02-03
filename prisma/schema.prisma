@@ -13,6 +13,7 @@ enum Role {
 
 enum BorrowStatus {
   reserved
+  expired
   borrowed
   due_soon
   overdue

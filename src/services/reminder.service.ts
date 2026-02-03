@@ -22,6 +22,14 @@ export interface OverdueSetterJobData {
   dueDate: Date;
 }
 
+export interface PickupExpiryJobData {
+  borrowId: string;
+  userEmail: string;
+  bookTitle?: string;
+  bookAuthor?: string;
+  pickupExpiresAt: Date;
+}
+
 export class ReminderService {
   /**
    * Schedule a pickup reminder for a reserved book
@@ -79,6 +87,84 @@ export class ReminderService {
     } catch (error) {
       console.error('Failed to schedule pickup reminder:', error);
       throw new Error(`Failed to schedule pickup reminder: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
+   * Schedule a job to expire a book pickup reservation
+   * @param borrowId - The borrow record ID
+   * @param userEmail - The user's email address
+   * @param pickupExpiresAt - When the pickup reservation expires
+   * @param bookTitle - Optional book title for email content
+   * @param bookAuthor - Optional book author for email content
+   */
+  static async schedulePickupExpiry(
+    borrowId: string,
+    userEmail: string,
+    pickupExpiresAt: Date,
+    bookTitle?: string,
+    bookAuthor?: string
+  ): Promise<void> {
+    try {
+      const now = new Date();
+      
+      // Calculate delay from now to expiry time
+      const delay = pickupExpiresAt.getTime() - now.getTime();
+      
+      // Only schedule if expiry time is in the future
+      if (delay <= 0) {
+        console.log(`Pickup expiry for borrow ${borrowId} is in the past, skipping scheduling`);
+        return;
+      }
+
+      const jobData: PickupExpiryJobData = {
+        borrowId,
+        userEmail,
+        bookTitle,
+        bookAuthor,
+        pickupExpiresAt,
+      };
+
+      // Add job to reminder queue
+      await reminderQueue.add(
+        'pickup-expiry',
+        jobData,
+        {
+          delay, // Delay in milliseconds
+          attempts: 3, // Retry up to 3 times
+          backoff: {
+            type: 'exponential',
+            delay: 5000, // Start with 5 seconds
+          },
+          removeOnComplete: 10, // Keep last 10 completed jobs
+          removeOnFail: 5, // Keep last 5 failed jobs
+        }
+      );
+
+      console.log(`Pickup expiry scheduled for borrow ${borrowId} at ${pickupExpiresAt.toISOString()}`);
+    } catch (error) {
+      console.error('Failed to schedule pickup expiry:', error);
+      throw new Error(`Failed to schedule pickup expiry: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
+   * Cancel a pickup expiry job for a specific borrow
+   * @param borrowId - The borrow record ID
+   */
+  static async cancelPickupExpiry(borrowId: string): Promise<void> {
+    try {
+      const jobs = await reminderQueue.getJobs(['waiting', 'delayed']);
+      
+      for (const job of jobs) {
+        if (job.name === 'pickup-expiry' && job.data.borrowId === borrowId) {
+          await job.remove();
+          console.log(`Pickup expiry cancelled for borrow ${borrowId}`);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to cancel pickup expiry:', error);
+      throw new Error(`Failed to cancel pickup expiry: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -258,6 +344,7 @@ export class ReminderService {
    */
   static async getReminderStatus(borrowId: string): Promise<{
     pickupReminder: { scheduled: boolean; data?: any; runAt?: Date } | null;
+    pickupExpiry: { scheduled: boolean; data?: any; runAt?: Date } | null;
     dueReminder: { scheduled: boolean; data?: any; runAt?: Date } | null;
     overdueSetter: { scheduled: boolean; data?: any; runAt?: Date } | null;
   }> {
@@ -265,6 +352,7 @@ export class ReminderService {
       const jobs = await reminderQueue.getJobs(['waiting', 'delayed', 'completed', 'failed']);
       
       let pickupReminder = null;
+      let pickupExpiry = null;
       let dueReminder = null;
       let overdueSetter = null;
 
@@ -278,6 +366,8 @@ export class ReminderService {
 
           if (job.name === 'pickup-reminder') {
             pickupReminder = reminderData;
+          } else if (job.name === 'pickup-expiry') {
+            pickupExpiry = reminderData;
           } else if (job.name === 'due-reminder') {
             dueReminder = reminderData;
           } else if (job.name === 'overdue-setter') {
@@ -286,7 +376,7 @@ export class ReminderService {
         }
       }
 
-      return { pickupReminder, dueReminder, overdueSetter };
+      return { pickupReminder, pickupExpiry, dueReminder, overdueSetter };
     } catch (error) {
       console.error('Failed to get reminder status:', error);
       throw new Error(`Failed to get reminder status: ${error instanceof Error ? error.message : 'Unknown error'}`);
