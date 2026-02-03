@@ -12,7 +12,7 @@ interface ConfigVariables {
   cloudinaryApiSecret: string;
   maxBooksPerUser: number;
   bookReservationPeriodHours: number;
-  holdBookDurationDays: number;
+  holdBookDuration: number;
   resendApiKey: string;
   resendSenderEmail: string;
   redisUrl: string;
@@ -74,7 +74,7 @@ export default class Config{
                 return Number.isFinite(v) ? v : 24
             })(),
 
-            holdBookDurationDays: (() => {
+            holdBookDuration: (() => {
                 const v = Number(process.env.HOLD_BOOK_DURATION_DAYS)
                 return Number.isFinite(v) ? v : 14
             })(),

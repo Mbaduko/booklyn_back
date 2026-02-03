@@ -1,4 +1,4 @@
-import { PickupReminderJobData, PickupExpiryJobData } from "../types/interface";
+import { PickupReminderJobData, PickupExpiryJobData, DueReminderJobData, OverdueSetterJobData } from "../types/interface";
 import { Job } from "bullmq";
 import { EmailService } from "../services/email.service";
 import { EmailTemplate } from "../templates/email-template";
@@ -205,6 +205,192 @@ export default class ReminderHandler {
 
         } catch (error) {
             console.error(`❌ Failed to process pickup expiry for borrow ID ${borrowId}:`, error);
+            throw error;
+        }
+    }
+
+    static async dueReminderHandler(job: Job) {
+        const { borrowId, userEmail }: DueReminderJobData = job.data;
+
+        try {
+            // Find the borrow record with book and user information
+            const borrowRecord = await prisma.borrowRecord.findUnique({
+                where: { id: borrowId },
+                include: {
+                    book: {
+                        select: {
+                            title: true,
+                            author: true
+                        }
+                    },
+                    user: {
+                        select: {
+                            name: true
+                        }
+                    }
+                }
+            });
+
+            if (!borrowRecord) {
+                console.error(`Borrow record not found for ID: ${borrowId}`);
+                throw new Error(`Borrow record not found for ID: ${borrowId}`);
+            }
+
+            // Check if the book is still borrowed
+            if (borrowRecord.status !== 'borrowed') {
+                console.log(`Book ${borrowRecord.book.title} is not borrowed (status: ${borrowRecord.status}). Skipping due reminder.`);
+                return { success: false, reason: 'Book not borrowed', status: borrowRecord.status };
+            }
+
+            // Update the borrow record status to due_soon
+            const updatedBorrow = await prisma.borrowRecord.update({
+                where: { id: borrowId },
+                data: {
+                    status: 'due_soon'
+                }
+            });
+
+            // Calculate days until due
+            const now = new Date();
+            const dueDate = new Date(job.data.dueDate);
+            const daysUntilDue = Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+
+            // Generate due reminder email
+            const emailContent = `
+                <p>This is a friendly reminder that your borrowed book is due soon.</p>
+                
+                <div class="warning-text">
+                    <strong>Due Date Approaching:</strong> "${borrowRecord.book.title}" is due in <strong>${daysUntilDue} day${daysUntilDue > 1 ? 's' : ''}</strong>.
+                </div>
+                
+                <p>Please return the book to the library before the due date to avoid late fees. You can also renew the book online if you need more time.</p>
+                
+                <p>If you have already returned the book, please disregard this message.</p>
+                
+                <p>Thank you for using Booklyn Library!</p>
+            `;
+
+            const emailHtml = EmailTemplate.generateTemplate({
+                title: 'Book Due Soon - Booklyn Library',
+                content: emailContent,
+                userName: borrowRecord.user.name,
+                actionButton: {
+                    text: 'Renew Book',
+                    url: `https://booklyn.com/borrowed/${borrowId}/renew`
+                },
+                footerText: `Book is due on ${dueDate.toLocaleDateString()}. Late fees may apply after this date.`
+            });
+
+            await EmailService.sendHtmlEmail(userEmail, 'Book Due Soon - Booklyn Library', emailHtml);
+
+            console.log(`✅ Due reminder sent to ${userEmail} for book "${borrowRecord.book.title}" (Borrow ID: ${borrowId})`);
+
+            return { 
+                success: true, 
+                borrowId, 
+                userEmail, 
+                bookTitle: borrowRecord.book.title,
+                dueDate,
+                daysUntilDue,
+                action: 'status_set_to_due_soon'
+            };
+
+        } catch (error) {
+            console.error(`❌ Failed to process due reminder for borrow ID ${borrowId}:`, error);
+            throw error;
+        }
+    }
+
+    static async overdueSetterHandler(job: Job) {
+        const { borrowId }: OverdueSetterJobData = job.data;
+
+        try {
+            // Find the borrow record
+            const borrowRecord = await prisma.borrowRecord.findUnique({
+                where: { id: borrowId },
+                include: {
+                    book: {
+                        select: {
+                            title: true,
+                            author: true
+                        }
+                    },
+                    user: {
+                        select: {
+                            name: true,
+                            email: true
+                        }
+                    }
+                }
+            });
+
+            if (!borrowRecord) {
+                console.error(`Borrow record not found for ID: ${borrowId}`);
+                throw new Error(`Borrow record not found for ID: ${borrowId}`);
+            }
+
+            // Check if the book is still borrowed or due_soon
+            if (borrowRecord.status !== 'borrowed' && borrowRecord.status !== 'due_soon') {
+                console.log(`Book ${borrowRecord.book.title} is not borrowed/due_soon (status: ${borrowRecord.status}). Skipping overdue setter.`);
+                return { success: false, reason: 'Book not borrowed or due_soon', status: borrowRecord.status };
+            }
+
+            // Calculate overdue days
+            const now = new Date();
+            const dueDate = new Date(job.data.dueDate);
+            const overdueDays = Math.floor((now.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24));
+
+            // Update the borrow record status to overdue and set overdue days
+            const updatedBorrow = await prisma.borrowRecord.update({
+                where: { id: borrowId },
+                data: {
+                    status: 'overdue',
+                    overduesDays: overdueDays
+                }
+            });
+
+            // Generate overdue notification email
+            const emailContent = `
+                <p>This is to inform you that your borrowed book is now overdue.</p>
+                
+                <div class="destructive-text">
+                    <strong>Book Overdue:</strong> "${borrowRecord.book.title}" was due on ${dueDate.toLocaleDateString()}.
+                </div>
+                
+                <p>The book is <strong>${overdueDays} day${overdueDays > 1 ? 's' : ''}</strong> overdue. Late fees may apply according to library policy.</p>
+                
+                <p>Please return the book as soon as possible to avoid additional charges. If you have already returned the book, please contact the library staff.</p>
+                
+                <p>Thank you for your prompt attention to this matter.</p>
+            `;
+
+            const emailHtml = EmailTemplate.generateTemplate({
+                title: 'Book Overdue - Booklyn Library',
+                content: emailContent,
+                userName: borrowRecord.user.name,
+                actionButton: {
+                    text: 'View My Account',
+                    url: 'https://booklyn.com/account'
+                },
+                footerText: `Book was due on ${dueDate.toLocaleDateString()}. Current overdue: ${overdueDays} day${overdueDays > 1 ? 's' : ''}.`
+            });
+
+            await EmailService.sendHtmlEmail(borrowRecord.user.email, 'Book Overdue - Booklyn Library', emailHtml);
+
+            console.log(`✅ Overdue status set for ${borrowRecord.user.email} - Book "${borrowRecord.book.title}" is ${overdueDays} day${overdueDays > 1 ? 's' : ''} overdue (Borrow ID: ${borrowId})`);
+
+            return { 
+                success: true, 
+                borrowId, 
+                userEmail: borrowRecord.user.email,
+                bookTitle: borrowRecord.book.title,
+                dueDate,
+                overdueDays,
+                action: 'status_set_to_overdue'
+            };
+
+        } catch (error) {
+            console.error(`❌ Failed to process overdue setter for borrow ID ${borrowId}:`, error);
             throw error;
         }
     }

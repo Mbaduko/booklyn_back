@@ -120,7 +120,7 @@ export class BorrowService {
         data: {
           status: 'borrowed',
           pickupDate: new Date(),
-          dueDate: new Date(Date.now() + Config.env.holdBookDurationDays* 24 * 60 * 60 * 1000), // 14 days from now
+          dueDate: new Date(Date.now() + Config.env.holdBookDuration* 60 * 60 * 1000),
         },
         select: {
           id: true,

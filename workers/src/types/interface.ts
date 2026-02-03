@@ -13,3 +13,16 @@ export interface PickupExpiryJobData {
   bookAuthor?: string;
   pickupExpiresAt: Date;
 }
+
+export interface DueReminderJobData {
+  borrowId: string;
+  userEmail: string;
+  bookTitle?: string;
+  bookAuthor?: string;
+  dueDate: Date;
+}
+
+export interface OverdueSetterJobData {
+  borrowId: string;
+  dueDate: Date;
+}
