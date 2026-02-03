@@ -2,6 +2,7 @@ import { PickupReminderJobData, PickupExpiryJobData, DueReminderJobData, Overdue
 import { Job } from "bullmq";
 import { EmailService } from "../services/email.service";
 import { EmailTemplate } from "../templates/email-template";
+import { NotificationService } from "../services/notification.service";
 import prisma from "../lib/prisma";
 import Config from "../config/index";
 
@@ -105,6 +106,21 @@ export default class ReminderHandler {
 
             await EmailService.sendHtmlEmail(userEmail, 'Book Pickup Reminder - Time Running Out!', emailHtml);
 
+            // Send notification to the user
+            try {
+                await NotificationService.sendNotificationToUser(
+                    borrowRecord.userId,
+                    {
+                        title: 'Book Pickup Reminder',
+                        message: `Your reserved book "${borrowRecord.book.title}" pickup deadline is approaching. Only ${timeRemaining} left!`,
+                        type: 'warning'
+                    }
+                );
+            } catch (notificationError) {
+                console.error('Failed to send pickup reminder notification:', notificationError);
+                // Don't fail the job if notification fails
+            }
+
             console.log(`✅ Pickup reminder sent to ${userEmail} for book "${borrowRecord.book.title}" (Borrow ID: ${borrowId})`);
 
             return { 
@@ -138,7 +154,8 @@ export default class ReminderHandler {
                     },
                     user: {
                         select: {
-                            name: true
+                            name: true,
+                            email: true
                         }
                     }
                 }
@@ -210,6 +227,36 @@ export default class ReminderHandler {
             });
 
             await EmailService.sendHtmlEmail(userEmail, 'Book Reservation Expired - Booklyn Library', emailHtml);
+
+            // Send notification to the user
+            try {
+                await NotificationService.sendNotificationToUser(
+                    borrowRecord.userId,
+                    {
+                        title: 'Book Reservation Expired',
+                        message: `Your reservation for "${borrowRecord.book.title}" has expired because the pickup deadline passed. The book is now available for others to reserve.`,
+                        type: 'error'
+                    }
+                );
+            } catch (notificationError) {
+                console.error('Failed to send pickup expiry notification:', notificationError);
+                // Don't fail the job if notification fails
+            }
+
+            // Send notification to library staff
+            try {
+                await NotificationService.sendNotificationToRole(
+                    'admin',
+                    {
+                        title: 'Book Reservation Expired',
+                        message: `User ${borrowRecord.user.name} (${borrowRecord.user.email}) failed to pick up "${borrowRecord.book.title}" before the deadline. Reservation has been automatically cancelled.`,
+                        type: 'info'
+                    }
+                );
+            } catch (notificationError) {
+                console.error('Failed to send pickup expiry notification to staff:', notificationError);
+                // Don't fail the job if notification fails
+            }
 
             console.log(`✅ Pickup expiry processed for ${userEmail} - Book "${borrowRecord.book.title}" reservation cancelled (Borrow ID: ${borrowId})`);
 
@@ -301,6 +348,21 @@ export default class ReminderHandler {
             });
 
             await EmailService.sendHtmlEmail(userEmail, 'Book Due Soon - Booklyn Library', emailHtml);
+
+            // Send notification to the user
+            try {
+                await NotificationService.sendNotificationToUser(
+                    borrowRecord.userId,
+                    {
+                        title: 'Book Due Soon',
+                        message: `Your borrowed book "${borrowRecord.book.title}" is due in ${timeUntilDueHuman}. Please return it or renew it to avoid late fees.`,
+                        type: 'warning'
+                    }
+                );
+            } catch (notificationError) {
+                console.error('Failed to send due reminder notification:', notificationError);
+                // Don't fail the job if notification fails
+            }
 
             console.log(`✅ Due reminder sent to ${userEmail} for book "${borrowRecord.book.title}" (Borrow ID: ${borrowId})`);
 
@@ -396,6 +458,36 @@ export default class ReminderHandler {
             });
 
             await EmailService.sendHtmlEmail(borrowRecord.user.email, 'Book Overdue - Booklyn Library', emailHtml);
+
+            // Send notification to the user
+            try {
+                await NotificationService.sendNotificationToUser(
+                    borrowRecord.userId,
+                    {
+                        title: 'Book Overdue',
+                        message: `Your borrowed book "${borrowRecord.book.title}" is ${overdueTimeHuman} overdue. Please return it immediately to avoid additional late fees.`,
+                        type: 'error'
+                    }
+                );
+            } catch (notificationError) {
+                console.error('Failed to send overdue notification:', notificationError);
+                // Don't fail the job if notification fails
+            }
+
+            // Send notification to library staff
+            try {
+                await NotificationService.sendNotificationToRole(
+                    'admin',
+                    {
+                        title: 'Book Overdue Alert',
+                        message: `User ${borrowRecord.user.name} (${borrowRecord.user.email}) has "${borrowRecord.book.title}" overdue by ${overdueTimeHuman}. Please follow up if necessary.`,
+                        type: 'warning'
+                    }
+                );
+            } catch (notificationError) {
+                console.error('Failed to send overdue notification to staff:', notificationError);
+                // Don't fail the job if notification fails
+            }
 
             console.log(`✅ Overdue status set for ${borrowRecord.user.email} - Book "${borrowRecord.book.title}" is ${overdueTimeHuman} overdue (Borrow ID: ${borrowId})`);
 
