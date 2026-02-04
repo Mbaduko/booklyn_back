@@ -1,4 +1,4 @@
-import { resend, DEFAULT_SENDER } from '../lib/email';
+import { sendEmailWithClient, DEFAULT_SENDER } from '../lib/email';
 import AppError from '../utils/AppError';
 
 // Email options interface matching Resend API
@@ -54,8 +54,8 @@ export class EmailService {
       if (emailOptions.replyTo) emailPayload.replyTo = emailOptions.replyTo;
       if (emailOptions.attachments) emailPayload.attachments = emailOptions.attachments;
 
-      // Send email using Resend
-      const result = await resend.emails.send(emailPayload);
+      // Send email using the appropriate client
+      const result = await sendEmailWithClient(emailPayload);
       return result;
     } catch (error) {
       console.error('Failed to send email:', error);
