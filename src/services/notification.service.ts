@@ -172,6 +172,52 @@ export class NotificationService {
   }
 
   /**
+   * Mark notification as read with ownership verification
+   */
+  static async markNotificationAsReadWithOwnership(
+    notificationId: string,
+    userId: string
+  ): Promise<Notification> {
+    try {
+      // First check if notification exists and belongs to the user
+      const existingNotification = await prisma.notification.findUnique({
+        where: { id: notificationId },
+        select: { userId: true }
+      });
+
+      if (!existingNotification) {
+        throw new AppError('Notification not found', 404);
+      }
+
+      if (existingNotification.userId !== userId) {
+        throw new AppError('Access denied: You can only mark your own notifications as read', 403);
+      }
+
+      // Mark as read
+      const notification: Notification = await prisma.notification.update({
+        where: { id: notificationId },
+        data: { read: true },
+        select: {
+          id: true,
+          userId: true,
+          title: true,
+          message: true,
+          type: true,
+          read: true,
+          createdAt: true,
+        },
+      }) as Notification;
+
+      return notification;
+    } catch (error) {
+      if (error instanceof AppError) {
+        throw error;
+      }
+      throw new AppError('Failed to mark notification as read', 500);
+    }
+  }
+
+  /**
    * Mark all notifications as read for a user
    */
   static async markAllNotificationsAsRead(userId: string): Promise<{ count: number }> {
