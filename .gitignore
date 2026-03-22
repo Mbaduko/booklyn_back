@@ -4,3 +4,4 @@ dist
 prisma/seeds
 dist_workers
 scripts
+docs

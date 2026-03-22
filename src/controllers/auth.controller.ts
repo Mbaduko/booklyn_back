@@ -47,4 +47,46 @@ export class AuthController {
       return next(error);
     }
   }
+
+  static async forgotPassword(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<Response | void> {
+    try {
+      const { email } = req.body;
+      
+      if (!email) {
+        return next(new AppError('Email is required', 400));
+      }
+
+      await AuthService.forgotPassword(email.trim());
+      return res.status(200).json({
+        message: 'If an account with that email exists, a password reset link has been sent'
+      });
+    } catch (error) {
+      return next(error);
+    }
+  }
+
+  static async resetPassword(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ): Promise<Response | void> {
+    try {
+      const { token, newPassword } = req.body;
+      
+      if (!token || !newPassword) {
+        return next(new AppError('Token and new password are required', 400));
+      }
+
+      await AuthService.resetPassword(token, newPassword);
+      return res.status(200).json({
+        message: 'Password has been reset successfully'
+      });
+    } catch (error) {
+      return next(error);
+    }
+  }
 }

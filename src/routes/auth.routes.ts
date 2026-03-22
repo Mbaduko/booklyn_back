@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { AuthController } from '../controllers/auth.controller';
 import { zodValidate } from '@/middlewares/zodValidate';
-import { credentialsSchema, signupSchema } from '@/validations/auth.schema';
+import { credentialsSchema, signupSchema, forgotPasswordSchema, resetPasswordSchema } from '@/validations/auth.schema';
 
 const authRouter = Router();
 
@@ -129,5 +129,103 @@ authRouter.post('/login', zodValidate(credentialsSchema, req => req.body), AuthC
  *                   example: Failed to create user account
  */
 authRouter.post('/signup', zodValidate(signupSchema, req => req.body), AuthController.signup);
+
+/**
+ * @swagger
+ * /auth/forgot-password:
+ *   post:
+ *     summary: Request password reset
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: user@example.com
+ *                 description: User's email address
+ *     responses:
+ *       200:
+ *         description: Password reset link sent (always returns success for security)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: If an account with that email exists, a password reset link has been sent
+ *       400:
+ *         description: Invalid input
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Email is required
+ *       500:
+ *         description: Server error
+ */
+authRouter.post('/forgot-password', zodValidate(forgotPasswordSchema, req => req.body), AuthController.forgotPassword);
+
+/**
+ * @swagger
+ * /auth/reset-password:
+ *   post:
+ *     summary: Reset password with token
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - token
+ *               - newPassword
+ *             properties:
+ *               token:
+ *                 type: string
+ *                 example: abc123def456...
+ *                 description: Password reset token from email
+ *               newPassword:
+ *                 type: string
+ *                 minLength: 8
+ *                 maxLength: 100
+ *                 example: NewPassword123
+ *                 description: New password (must contain uppercase, lowercase, and number)
+ *     responses:
+ *       200:
+ *         description: Password reset successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Password has been reset successfully
+ *       400:
+ *         description: Invalid or expired token
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: Invalid or expired reset token
+ *       500:
+ *         description: Server error
+ */
+authRouter.post('/reset-password', zodValidate(resetPasswordSchema, req => req.body), AuthController.resetPassword);
 
 export default authRouter;
