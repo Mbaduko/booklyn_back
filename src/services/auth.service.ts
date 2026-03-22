@@ -150,11 +150,9 @@ static async login(email: string, password: string): Promise<AuthResponse> {
         throw new AppError('Invalid or expired reset token', 400);
       }
 
-      const hashedPassword = await argon.hash(newPassword);
-
       await prisma.user.update({
         where: { id: resetTokenRecord.user.id },
-        data: { password: hashedPassword },
+        data: { password: newPassword },
       });
 
       await prisma.passwordResetToken.delete({
